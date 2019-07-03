@@ -11,9 +11,9 @@ opt <- list(xlinks = "../tdp43_studentExercise/tardbp-esc-m-p2lox-gfp-tdp43-2015
 	gtf = "../hg38_regions/gencode.v30.primary_assembly.annotation.gtf", #"~/Ule/ref/gencode.v27.annotation.gtf.gz"
 	region = "chr3:35754106:35856276:+",
 	gene = "ENSMUSG00000037400", #ID or name "Atp11b"
-	smoothing = "rollmean", #gaussian or rollmean
+	smoothing = "gaussian", #gaussian or rollmean
 	smoothing_window = 10, #both types of smoothing require a window
-	normalisation = "maxpeak", #libsize or maxpeak or none
+	normalisation = "libsize", #libsize or maxpeak or none
 	output = "plot.pdf")
 
 # ==========
@@ -40,23 +40,29 @@ library(zoo)
 library(dplyr)
 
 # Read in xlinks
-xlinks <- strsplit(opt$xlinks, " ")[[1]] %>% lapply(.,import, format="bedGRaph", which=region.gr)
+xlinks <- strsplit(opt$xlinks, " ")[[1]] %>% lapply(.,import, format="bedGRaph")
+libSizes <- lapply(xlinks, function(x){sum(abs(x$score))})
+
+# Subset for region
+xlinks <- lapply(xlinks,subsetByOverlaps, region.gr)
+
 # Names of bedgraphs : If name is supplied use that, if not then generate a name from the file name
 if (!is.null(opt$track_names)) {
   track_names=strsplit(opt$track_names, " ")[[1]]
 } else {
-  track_names=strsplit(opt$xlinks, " ")[[1]] %>% lapply(.,gsub,pattern=".bedgraph",replacement="") %>% lapply(.,gsub,pattern=".*[/@]",replacement="")
+  track_names = lapply(strsplit(opt$xlinks, " ")[[1]], function(x) gsub(".bedgraph", "", basename(x)))
 }
 # Create dataframe for plotting
 xlinks_df <- lapply(xlinks, as.data.frame)
 for (i in 1:length(xlinks_df)){
   xlinks_df[[i]]$sample <- track_names[[i]]
+  xlinks_df[[i]]$libSize <- libSizes[[i]]
 }
 xl_df <- dplyr::bind_rows(xlinks_df)
 xl_df <- as.data.frame(xl_df)
 
 # Do the normalisation
-xl_df <- as.data.frame(switch(opt$normalisation, "libsize"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(norm=score/sum(score)),
+xl_df <- as.data.frame(switch(opt$normalisation, "libsize"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(norm=score/libSize),
        "maxpeak"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(norm=score/max(score)),
        "none"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(norm=score)))
 # Do the smoothing
