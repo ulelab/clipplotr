@@ -59,11 +59,11 @@ if(is.null(opt$region)) {
   
 } else if(grepl("^ENS", opt$region)) {
   
-  region.gr <- genes.gr[grepl(opt$gene, genes.gr$gene_id)]
+  region.gr <- genes.gr[grepl(opt$region, genes.gr$gene_id)]
   
-} else if(grepl("^[A-Z]", opt$gene)) {
+} else if(grepl("^[A-Z]", opt$region)) {
   
-  region.gr <- genes.gr[grepl(opt$gene, genes.gr$gene_name)]
+  region.gr <- genes.gr[grepl(opt$region, genes.gr$gene_name)]
   
 } else {
   
@@ -188,7 +188,6 @@ annot.grl <- GRangesList(lapply(annot.grl, function(x) {
 p.annot <- ggplot(data = annot.grl) +
   geom_alignment(cds.rect.h = 0.25) +
   labs(x = "Coordinate")
-  theme_cowplot()
 
 p.annot <- p.annot@ggplot
 
