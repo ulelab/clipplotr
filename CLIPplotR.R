@@ -86,12 +86,28 @@ library(smoother)
 library(zoo)
 library(dplyr)
 
+ImportiMapsBedgraph <- function(bedgraph.file) {
+  
+  bg <- import.bedGraph(bedgraph.file)
+  
+  # Assign strand based on score
+  strand(bg)[bg$score < 0] <- "-"
+  strand(bg)[bg$score > 0] <- "+"
+  
+  # Convert scores to positives now that strands assigned
+  bg$score <- abs(bg$score)
+  
+  return(bg)
+  
+}
+
+
 # Read in xlinks
-xlinks <- strsplit(opt$xlinks, " ")[[1]] %>% lapply(.,import, format="bedGraph")
+xlinks <- strsplit(opt$xlinks, " ")[[1]] %>% lapply(., ImportiMapsBedgraph)
 libSizes <- lapply(xlinks, function(x){sum(abs(x$score))})
 
 # Subset for region
-xlinks <- lapply(xlinks, subsetByOverlaps, region.gr)
+xlinks <- lapply(xlinks, subsetByOverlaps, region.gr, ignore.strand = FALSE)
 
 # Names of bedgraphs : If name is supplied use that, if not then generate a name from the file name
 if (!is.null(opt$track_names)) {
@@ -118,11 +134,10 @@ xl_df <- dplyr::bind_rows(xlinks_df)
 xl_df <- as.data.frame(xl_df) # Isn't it already a data.frame?
 
 # Do the normalisation
-xl_df <- as.data.frame(switch(opt$normalisation, "libsize"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(norm=score/libSize),
+xl_df <- as.data.frame(switch(opt$normalisation, "libsize"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(norm=(score * 1e6)/libSize),
        "maxpeak"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(norm=score/max(score)),
        "none"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(norm=score)))
 
-# TODO: maybe convert to XPM for easier reading
 
 # Do the smoothing
 
