@@ -172,12 +172,13 @@ annot.grl <- split(annot.gr, annot.gr$tx_name)
 
 # Need to trim exons so they don't overlap utrs to ensure they aren't overplotted
 annot.grl <- GRangesList(lapply(annot.grl, function(x) {
-  
+
+  exon <- x[x$type == "exon"]  
   utr <- x[x$type == "utr"]
-  exon <- x[x$type == "exon"]
+  strand(utr) <- unique(strand(exon)) # Otherwise utr isn't stranded, but needed for setdiff later
   rest <- x[!x$type %in% c("utr", "exon")]
 
-  exon <- GenomicRanges::setdiff(exon, utr, ignore.strand = TRUE)  
+  exon <- GenomicRanges::setdiff(exon, utr, ignore.strand = FALSE)  
   mcols(exon)$type <- "exon"
   
   return(sort(c(rest, exon, utr)))
@@ -186,10 +187,11 @@ annot.grl <- GRangesList(lapply(annot.grl, function(x) {
 
 
 p.annot <- ggplot(data = annot.grl) +
-  geom_alignment(cds.rect.h = 0.25) +
+  geom_alignment(cds.rect.h = 0.1, stat = "identity") +
   labs(x = "Coordinate")
 
 p.annot <- p.annot@ggplot
+p.annot
 
 # ==========
 # Part 3 - combine plots
