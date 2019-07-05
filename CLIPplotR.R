@@ -8,11 +8,13 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference gtf (Gencode)"),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
                     make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize", default = "libsize"),
-                    make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Normalisation options: none, gaussian, rollmean", default = "gaussian"),
-                    make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window", default = 10),
+                    make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Normalisation options: none, gaussian, rollmean", default = "rollmean"),
+                    make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window", default = 100),
                     make_option(c("-o", "--output", action = "store", type = "character", help = "Output plot filename")))
 opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
+
+print(opt)
 
 # opt <- list(xlinks = "../tdp43_studentExercise/tardbp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph ../tdp43_studentExercise/tardbp-ngfp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph", #from https://imaps.genialis.com/iclip
 #            # track_names = "tdp43_1 tdp43_2", # or can be NULL 
@@ -24,18 +26,18 @@ opt <- parse_args(opt_parser)
 # 	normalisation = "libsize", #libsize or maxpeak or none
 # 	output = "plot.pdf")
 
-setwd("~/Ule/charlotte/CLIPplotR")
-
-opt <- list(xlinks = "tardbp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph tardbp-ngfp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph", #from https://imaps.genialis.com/iclip
-            # track_names = "tdp43_1 tdp43_2", # or can be NULL 
-            gtf = "gencode.vM22.annotation.gtf.gz", #"~/Ule/ref/gencode.v27.annotation.gtf.gz"
-            region = "chr3:35754106:35856276:+",
-            # gene = "ENSMUSG00000037400", #ID or name "Atp11b"
-            # gene = "Atp11b", #ID or name "Atp11b"
-            smoothing = "rollmean", #gaussian or rollmean or none
-            smoothing_window = 10, #both types of smoothing require a window
-            normalisation = "none", #libsize or maxpeak or none
-            output = "plot.pdf")
+# setwd("~/Ule/charlotte/CLIPplotR")
+# 
+# opt <- list(xlinks = "tardbp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph tardbp-ngfp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph", #from https://imaps.genialis.com/iclip
+#             # track_names = "tdp43_1 tdp43_2", # or can be NULL
+#             gtf = "gencode.vM22.annotation.gtf.gz", #"~/Ule/ref/gencode.v27.annotation.gtf.gz"
+#             # region = "chr3:35754106:35856276:+",
+#             # gene = "ENSMUSG00000037400", #ID or name "Atp11b"
+#             region = "Atp11b", #ID or name "Atp11b"
+#             smoothing = "rollmean", #gaussian or rollmean or none
+#             smoothing_window = 1000, #both types of smoothing require a window
+#             normalisation = "none", #libsize or maxpeak or none
+#             output = "plot.pdf")
 
 # Actually just have it so that region can be a gene id or name
 
@@ -50,7 +52,17 @@ library(GenomicFeatures)
 message("Making annotation from GTF")
 gtf <- rtracklayer::import.gff2(opt$gtf)
 genes.gr <- gtf[gtf$type == "gene"]
+
+if(file.exists(gsub(".gtf.gz|.gf", ".sqlite", opt$gtf))) {
+  
+  TxDb <- loadDb(gsub(".gtf.gz|.gf", ".sqlite", opt$gtf))
+  
+} else {
+
 TxDb <- makeTxDbFromGFF(opt$gtf)
+saveDb(TxDb, gsub(".gtf.gz|.gf", ".sqlite", opt$gtf))
+
+}
 
 # Define region and plot title
 if(is.null(opt$region)) {
@@ -74,6 +86,7 @@ if(is.null(opt$region)) {
   
 }
 
+seqlevels(region.gr) <- as.character(unique(seqnames(region.gr))) # Cut down to one seqlevels for later comparision
 
 # ==========
 # Part 1 - top half: normalised and smoothed tracks
@@ -120,9 +133,9 @@ xlinks <- lapply(xlinks, function(x) {
   zero.gr$score <- 0
   
   # Combine and sanity check
-  xlinks.gr <- c(xlinks.gr, zero.gr)
+  xlinks.gr <- sort(c(xlinks.gr, zero.gr))
   
-  stopifnot(all(width(xlinks.gr) == 1) & reduce(xlinks.gr) == region.gr)
+  stopifnot(all(width(xlinks.gr) == 1 & reduce(xlinks.gr) == region.gr))
   return(xlinks.gr)
   
 })
@@ -174,7 +187,9 @@ p.iclip <- ggplot(xl_df,aes(x=start,y=smoothed, group=sample, color=sample)) +
   geom_line() +
   labs(title = opt$region,
        x = "Coordinate",
-       y = "Normalised crosslinks")+
+       y = "Crosslink signal",
+       colour = "") +
+  scale_colour_tableau(palette = "Tableau 10") +
   theme_cowplot() + theme(legend.position = "top")
 
 # TODO: remove x axis and x axis label once we are happy the two plots line up (just keep on bottom annotation plot)
@@ -209,13 +224,13 @@ p.annot <- ggplot(data = annot.grl) +
   labs(x = "Coordinate")
 
 p.annot <- p.annot@ggplot
-p.annot
+# p.annot
 
 # ==========
 # Part 3 - combine plots
 # ==========
 
 # Interactive for now to test
-plot_grid(p.iclip, p.annot, align = "hv", axis = "tlbr", nrow = 2, rel_heights = c(1, 2))
+# plot_grid(p.iclip, p.annot, align = "hv", axis = "tlbr", nrow = 2, rel_heights = c(1, 2))
 
-# save_plot(plot_grid(p.top, p.annot, align = "hv", axis = "tlbr", nrow = 2, rel_heights, c(1, 2)), filename = opt$output)
+ggsave(plot_grid(p.iclip, p.annot, align = "hv", axis = "tlbr", nrow = 2, rel_heights = c(1, 2)), width = 297, height = 210, units = "mm", filename = opt$output)
