@@ -1,8 +1,42 @@
-# Script to plot gene structure given a GTF
+# Script to plot multiple CLIP tracks with gene structures
 # A. M. Chakrabarti
 # Last updated: 28th June 2019
 
-suppressWarnings(suppressPackageStartupMessages(library(optparse)))
+# ==========
+# Preamble
+# ==========
+
+CheckAndLoad <- function(package) {
+  
+  if(!suppressPackageStartupMessages(require(package, character.only = TRUE, quietly = TRUE))) {
+    
+    message("Installing ", package)
+    install.packages(package, character.only = TRUE)
+    suppressPackageStartupMessages(library(package, character.only = TRUE, quietly = TRUE))
+    
+  }
+  
+}
+
+# Load CRAN packages
+packages <- c("optparse", "BiocManager", "ggplot2", "ggthemes", "cowplot", "smoother", "zoo", "dplyr")
+for(package in packages) CheckAndLoad(package)
+
+# Loas Bioconductor packages
+biocpackages <- c("rtracklayer", "GenomicFeatures", "ggbio")
+for(package in biocpackages) {
+  
+  if(!suppressPackageStartupMessages(require(package, character.only = TRUE, quietly = TRUE))) {
+    
+    message("Installing ", package)
+    BiocManager::install(package)
+    suppressPackageStartupMessages(library(package, character.only = TRUE, quietly = TRUE))
+    
+  }  
+  
+}
+
+# suppressPackageStartupMessages(library(optparse))
 
 option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "character", help = "Input iCLIP bedgraphs (space separated)"),
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference gtf (Gencode)"),
@@ -14,7 +48,17 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
 opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
 
-print(opt)
+# print(opt)
+
+# suppressPackageStartupMessages(library(rtracklayer))
+# suppressPackageStartupMessages(library(GenomicFeatures))
+# suppressPackageStartupMessages(library(ggplot2))
+# suppressPackageStartupMessages(library(ggthemes))
+# suppressPackageStartupMessages(library(cowplot))
+# suppressPackageStartupMessages(library(smoother))
+# suppressPackageStartupMessages(library(zoo))
+# suppressPackageStartupMessages(library(dplyr))
+# suppressPackageStartupMessages(library(ggbio))
 
 # opt <- list(xlinks = "../tdp43_studentExercise/tardbp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph ../tdp43_studentExercise/tardbp-ngfp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph", #from https://imaps.genialis.com/iclip
 #            # track_names = "tdp43_1 tdp43_2", # or can be NULL 
@@ -39,32 +83,31 @@ print(opt)
 #             normalisation = "none", #libsize or maxpeak or none
 #             output = "plot.pdf")
 
-# Actually just have it so that region can be a gene id or name
-
 # ==========
-# Part 0 - Get relevant regions in bedgraphs
+# Part 0 - Create annotation and get relevant regions in bedgraphs
 # ==========
-
-library(rtracklayer)
-library(GenomicFeatures)
 
 # Create rosetta and TxDb
-message("Making annotation from GTF")
+message("Reading in annotation from GTF")
+
 gtf <- rtracklayer::import.gff2(opt$gtf)
 genes.gr <- gtf[gtf$type == "gene"]
 
+# Create TxDb if doesn't already exist
 if(file.exists(gsub(".gtf.gz|.gf", ".sqlite", opt$gtf))) {
-  
+
+  message("Loading pre-existing annotation database")    
   TxDb <- loadDb(gsub(".gtf.gz|.gf", ".sqlite", opt$gtf))
   
 } else {
 
-TxDb <- makeTxDbFromGFF(opt$gtf)
-saveDb(TxDb, gsub(".gtf.gz|.gf", ".sqlite", opt$gtf))
+  message("Creating annotation database for future runs")
+  TxDb <- makeTxDbFromGFF(opt$gtf)
+  saveDb(TxDb, gsub(".gtf.gz|.gf", ".sqlite", opt$gtf))
 
 }
 
-# Define region and plot title
+# Define region
 if(is.null(opt$region)) {
   
   stop("Need to supply a region or a gene id or name")
@@ -92,13 +135,6 @@ seqlevels(region.gr) <- as.character(unique(seqnames(region.gr))) # Cut down to 
 # Part 1 - top half: normalised and smoothed tracks
 # ==========
 
-library(ggplot2)
-library(ggthemes)
-library(cowplot)
-library(smoother)
-library(zoo)
-library(dplyr)
-
 ImportiMapsBedgraph <- function(bedgraph.file) {
   
   bg <- import.bedGraph(bedgraph.file)
@@ -114,14 +150,12 @@ ImportiMapsBedgraph <- function(bedgraph.file) {
   
 }
 
-
 # Read in xlinks
+message("Loading bedgraphs")
 xlinks <- strsplit(opt$xlinks, " ")[[1]] %>% lapply(., ImportiMapsBedgraph)
-libSizes <- lapply(xlinks, function(x){sum(abs(x$score))})
+libSizes <- lapply(xlinks, function(x) { sum(abs(x$score)) })
 
-# Subset for region
-# xlinks <- lapply(xlinks, subsetByOverlaps, region.gr, ignore.strand = FALSE)
-
+# Subset for region and add in 0 count position
 xlinks <- lapply(xlinks, function(x) {
   
   # Subset bedgraph to region
@@ -142,19 +176,28 @@ xlinks <- lapply(xlinks, function(x) {
 
 # Names of bedgraphs : If name is supplied use that, if not then generate a name from the file name
 if (!is.null(opt$track_names)) {
+  
   track_names=strsplit(opt$track_names, " ")[[1]]
+  
 } else {
+  
   track_names = lapply(strsplit(opt$xlinks, " ")[[1]], function(x) gsub(".bedgraph", "", basename(x)))
+  
 }
+
 # Create dataframe for plotting
 xlinks_df <- lapply(xlinks, as.data.frame)
-for (i in 1:length(xlinks_df)){
+
+for (i in 1:length(xlinks_df)) {
+  
   xlinks_df[[i]]$sample <- track_names[[i]]
   xlinks_df[[i]]$libSize <- libSizes[[i]]
+  
 }
+
 xl_df <- dplyr::bind_rows(xlinks_df)
-# 
-# I get this warning here:
+
+# TODO: Fix this warning:
 # Warning messages:
 #   1: In bind_rows_(x, .id) : Unequal factor levels: coercing to character
 # 2: In bind_rows_(x, .id) :
@@ -165,24 +208,21 @@ xl_df <- dplyr::bind_rows(xlinks_df)
 xl_df <- as.data.frame(xl_df) # Isn't it already a data.frame?
 
 # Do the normalisation
-xl_df <- as.data.frame(switch(opt$normalisation, "libsize"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(norm=(score * 1e6)/libSize),
-       "maxpeak"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(norm=score/max(score)),
-       "none"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(norm=score)))
+message("Normalising")
+xl_df <- as.data.frame(switch(opt$normalisation, 
+                              "libsize"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(norm=(score * 1e6)/libSize),
+                              "maxpeak"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(norm=score/max(score)),
+                              "none"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(norm=score)))
 
 
 # Do the smoothing
-
-
+message("Smoothing")
 xl_df <- as.data.frame(switch(opt$smoothing, 
                               "gaussian"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(smoothed= smth.gaussian(norm, window=opt$smoothing_window)),
                               "rollmean"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(smoothed= rollmean(norm, opt$smoothing_window, fill=0)),
                               "none"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(smoothed= norm)))
 
-# TODO: I think for the smoothing to work properly, the vector needs to be without breaks, 1 value per coordinate and include positions with counts of 0
-
-# TODO: Also maybe smooth + and - strands separately... Or only keep xlinks on the same strand as the gene/region. Maybe latter. Actually, should filter the bedgraph properly using subsetByOverlaps
-
-# Plot
+# Plot top half
 p.iclip <- ggplot(xl_df,aes(x=start,y=smoothed, group=sample, color=sample)) +
   geom_line() +
   labs(title = opt$region,
@@ -192,14 +232,11 @@ p.iclip <- ggplot(xl_df,aes(x=start,y=smoothed, group=sample, color=sample)) +
   scale_colour_tableau(palette = "Tableau 10") +
   theme_cowplot() + theme(legend.position = "top")
 
-# TODO: remove x axis and x axis label once we are happy the two plots line up (just keep on bottom annotation plot)
-
 # ==========
 # Part 2 - bottom half: gene structures
 # ==========
 
-library(ggbio)
-
+message("Creating annotation track")
 annot.gr <- biovizBase::crunch(TxDb, which = region.gr)
 annot.grl <- split(annot.gr, annot.gr$tx_name)
 
@@ -226,14 +263,13 @@ p.annot <- ggplot(data = annot.grl) +
   geom_alignment(cds.rect.h = 0.1, fill = "black", stat = "identity") +
   labs(x = "Coordinate")
 
+# Select out ggplot object
 p.annot <- p.annot@ggplot
-# p.annot
 
 # ==========
 # Part 3 - combine plots
 # ==========
 
-# Interactive for now to test
 # plot_grid(p.iclip, p.annot, align = "hv", axis = "tlbr", nrow = 2, rel_heights = c(1, 2))
-
 ggsave(plot_grid(p.iclip, p.annot, align = "hv", axis = "tlbr", nrow = 2, rel_heights = c(1, 2)), width = 297, height = 210, units = "mm", filename = opt$output)
+message("Completed")
