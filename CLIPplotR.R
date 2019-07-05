@@ -32,7 +32,7 @@ opt <- list(xlinks = "tardbp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgr
             region = "chr3:35754106:35856276:+",
             # gene = "ENSMUSG00000037400", #ID or name "Atp11b"
             # gene = "Atp11b", #ID or name "Atp11b"
-            smoothing = "none", #gaussian or rollmean or none
+            smoothing = "rollmean", #gaussian or rollmean or none
             smoothing_window = 10, #both types of smoothing require a window
             normalisation = "none", #libsize or maxpeak or none
             output = "plot.pdf")
@@ -107,7 +107,25 @@ xlinks <- strsplit(opt$xlinks, " ")[[1]] %>% lapply(., ImportiMapsBedgraph)
 libSizes <- lapply(xlinks, function(x){sum(abs(x$score))})
 
 # Subset for region
-xlinks <- lapply(xlinks, subsetByOverlaps, region.gr, ignore.strand = FALSE)
+# xlinks <- lapply(xlinks, subsetByOverlaps, region.gr, ignore.strand = FALSE)
+
+xlinks <- lapply(xlinks, function(x) {
+  
+  # Subset bedgraph to region
+  xlinks.gr <- subsetByOverlaps(x, region.gr, ignore.strand = FALSE)
+  
+  # Get single position 0 counts
+  zero.gr <- setdiff(region.gr, xlinks.gr)
+  zero.gr <- unlist(tile(zero.gr, width = 1))
+  zero.gr$score <- 0
+  
+  # Combine and sanity check
+  xlinks.gr <- c(xlinks.gr, zero.gr)
+  
+  stopifnot(all(width(xlinks.gr) == 1) & reduce(xlinks.gr) == region.gr)
+  return(xlinks.gr)
+  
+})
 
 # Names of bedgraphs : If name is supplied use that, if not then generate a name from the file name
 if (!is.null(opt$track_names)) {
