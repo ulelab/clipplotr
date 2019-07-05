@@ -2,14 +2,14 @@
 # A. M. Chakrabarti
 # Last updated: 28th June 2019
 
-library(optparse)
+suppressWarnings(suppressPackageStartupMessages(library(optparse)))
 
 option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "character", help = "Input iCLIP bedgraphs (space separated)"),
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference gtf (Gencode)"),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
-                    make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize", default = "libsize"),
-                    make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Normalisation options: none, gaussian, rollmean", default = "rollmean"),
-                    make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window", default = 100),
+                    make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize [default %default]", default = "libsize"),
+                    make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, spline, gaussian [default %default]", default = "rollmean"),
+                    make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window [default %default]", default = 100),
                     make_option(c("-o", "--output", action = "store", type = "character", help = "Output plot filename")))
 opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
@@ -186,7 +186,7 @@ xl_df <- as.data.frame(switch(opt$smoothing,
 p.iclip <- ggplot(xl_df,aes(x=start,y=smoothed, group=sample, color=sample)) +
   geom_line() +
   labs(title = opt$region,
-       x = "Coordinate",
+       x = "",
        y = "Crosslink signal",
        colour = "") +
   scale_colour_tableau(palette = "Tableau 10") +
@@ -218,9 +218,12 @@ annot.grl <- GRangesList(lapply(annot.grl, function(x) {
   
 }))
 
+# Add gene name to labels
+gene_names <- gtf$gene_name[match(names(annot.grl), gtf$transcript_id)]
+names(annot.grl) <- paste0(gene_names, " - ", names(annot.grl))
 
 p.annot <- ggplot(data = annot.grl) +
-  geom_alignment(cds.rect.h = 0.1, stat = "identity") +
+  geom_alignment(cds.rect.h = 0.1, fill = "black", stat = "identity") +
   labs(x = "Coordinate")
 
 p.annot <- p.annot@ggplot
