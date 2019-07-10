@@ -2,7 +2,8 @@
 
 # Script to plot multiple CLIP tracks with gene structures
 # A. M. Chakrabarti
-# Last updated: 28th June 2019
+# C. Capitanchik
+# Last updated: 10th July 2019
 
 # ==========
 # Preamble
