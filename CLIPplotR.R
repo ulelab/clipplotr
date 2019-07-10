@@ -23,6 +23,7 @@ CheckAndLoad <- function(package) {
 CheckAndLoad("optparse")
 
 option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "character", help = "Input iCLIP bedgraphs (space separated)"),
+                    make_option(c("-l", "--label"), action = "store", type = "character", help = "iCLIP bedgraph labels (space separated)"),
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference gtf (Gencode)"),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
                     make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize [default %default]", default = "libsize"),
@@ -49,18 +50,6 @@ for(package in biocpackages) {
   }  
   
 }
-
-# suppressPackageStartupMessages(library(optparse))
-
-option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "character", help = "Input iCLIP bedgraphs (space separated)"),
-                    make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference gtf (Gencode)"),
-                    make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
-                    make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize [default %default]", default = "libsize"),
-                    make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, spline, gaussian [default %default]", default = "rollmean"),
-                    make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window [default %default]", default = 100),
-                    make_option(c("-o", "--output", action = "store", type = "character", help = "Output plot filename")))
-opt_parser = OptionParser(option_list = option_list)
-opt <- parse_args(opt_parser)
 
 # print(opt)
 
@@ -191,7 +180,7 @@ xlinks <- lapply(xlinks, function(x) {
 # Names of bedgraphs : If name is supplied use that, if not then generate a name from the file name
 if (!is.null(opt$track_names)) {
   
-  track_names=strsplit(opt$track_names, " ")[[1]]
+  track_names=strsplit(opt$label, " ")[[1]]
   
 } else {
   
