@@ -38,7 +38,7 @@ opt <- parse_args(opt_parser)
 packages <- c("BiocManager", "ggplot2", "ggthemes", "cowplot", "smoother", "zoo", "dplyr")
 for(package in packages) CheckAndLoad(package)
 
-# Loas Bioconductor packages
+# Load Bioconductor packages
 biocpackages <- c("rtracklayer", "GenomicFeatures", "ggbio")
 for(package in biocpackages) {
   
@@ -81,7 +81,7 @@ for(package in biocpackages) {
 #             gtf = "gencode.vM22.annotation.gtf.gz", #"~/Ule/ref/gencode.v27.annotation.gtf.gz"
 #             # region = "chr3:35754106:35856276:+",
 #             # gene = "ENSMUSG00000037400", #ID or name "Atp11b"
-#             region = "Atp11b", #ID or name "Atp11b"
+#             region = "Ank3", #ID or name "Atp11b"
 #             smoothing = "rollmean", #gaussian or rollmean or none
 #             smoothing_window = 1000, #both types of smoothing require a window
 #             normalisation = "none", #libsize or maxpeak or none
@@ -179,7 +179,7 @@ xlinks <- lapply(xlinks, function(x) {
 })
 
 # Names of bedgraphs : If name is supplied use that, if not then generate a name from the file name
-if (!is.null(opt$track_names)) {
+if (!is.null(opt$label)) {
   
   track_names=strsplit(opt$label, " ")[[1]]
   
@@ -264,7 +264,7 @@ gene_names <- gtf$gene_name[match(names(annot.grl), gtf$transcript_id)]
 names(annot.grl) <- paste0(gene_names, " - ", names(annot.grl))
 
 p.annot <- ggplot(data = annot.grl) +
-  geom_alignment(cds.rect.h = 0.1, fill = "black", stat = "identity") +
+  geom_alignment(cds.rect.h = 0.1, length = unit(0.1, "cm"), fill = "black", stat = "identity") +
   labs(x = "Coordinate")
 
 # Select out ggplot object
