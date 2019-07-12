@@ -14,7 +14,7 @@ CheckAndLoad <- function(package) {
   if(!suppressPackageStartupMessages(require(package, character.only = TRUE, quietly = TRUE))) {
     
     message("Installing ", package)
-    install.packages(package, character.only = TRUE)
+    install.packages(package, character.only = TRUE, repos = "https://cloud.r-project.org")
     suppressPackageStartupMessages(library(package, character.only = TRUE, quietly = TRUE))
     
   }
@@ -275,5 +275,5 @@ p.annot <- p.annot@ggplot
 # ==========
 
 # plot_grid(p.iclip, p.annot, align = "hv", axis = "tlbr", nrow = 2, rel_heights = c(1, 2))
-ggsave(plot_grid(p.iclip, p.annot, align = "hv", axis = "tlbr", nrow = 2, rel_heights = c(1, 2)), width = 297, height = 210, units = "mm", filename = opt$output)
+ggsave(plot_grid(p.iclip, p.annot, align = "hv", axis = "tlbr", nrow = 2, rel_heights = c(1, 2)), height = 297, width = 210, units = "mm", filename = opt$output)
 message("Completed")
