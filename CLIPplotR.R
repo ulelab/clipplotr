@@ -98,16 +98,16 @@ gtf <- rtracklayer::import.gff2(opt$gtf)
 genes.gr <- gtf[gtf$type == "gene"]
 
 # Create TxDb if doesn't already exist
-if(file.exists(gsub(".gtf.gz|.gf", ".sqlite", opt$gtf))) {
+if(file.exists(gsub(".gtf.gz|.gtf", ".sqlite", opt$gtf))) {
 
   message("Loading pre-existing annotation database")    
-  TxDb <- loadDb(gsub(".gtf.gz|.gf", ".sqlite", opt$gtf))
+  TxDb <- loadDb(gsub(".gtf.gz|.gtf", ".sqlite", opt$gtf))
   
 } else {
 
   message("Creating annotation database for future runs")
   TxDb <- makeTxDbFromGFF(opt$gtf)
-  saveDb(TxDb, gsub(".gtf.gz|.gf", ".sqlite", opt$gtf))
+  saveDb(TxDb, gsub(".gtf.gz|.gtf", ".sqlite", opt$gtf))
 
 }
 
