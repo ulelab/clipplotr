@@ -122,7 +122,8 @@ if(is.null(opt$region)) {
   
 } else if(grepl("^[A-Z]", opt$region)) {
   
-  region.gr <- genes.gr[grepl(opt$region, genes.gr$gene_name)]
+  # region.gr <- genes.gr[grepl(opt$region, genes.gr$gene_name)]
+  region.gr <- genes.gr[opt$region == genes.gr$gene_name]
   
 } else {
   
