@@ -86,6 +86,8 @@ for(package in biocpackages) {
 #             smoothing_window = 1000, #both types of smoothing require a window
 #             normalisation = "none", #libsize or maxpeak or none
 #             output = "plot.pdf")
+# 
+# opt <- list(region = "chr15:68206992:68210000:-", gtf = "gencode.v29.primary_assembly.annotation.gtf.gz")
 
 # ==========
 # Part 0 - Create annotation and get relevant regions in bedgraphs
@@ -243,6 +245,7 @@ p.iclip <- ggplot(xl_df,aes(x=start,y=smoothed, group=sample, color=sample)) +
 
 message("Creating annotation track")
 annot.gr <- biovizBase::crunch(TxDb, which = region.gr)
+annot.gr$tx_name <- as.character(annot.gr$tx_name)
 annot.grl <- split(annot.gr, annot.gr$tx_name)
 
 # Need to trim exons so they don't overlap utrs to ensure they aren't overplotted
@@ -259,6 +262,23 @@ annot.grl <- GRangesList(lapply(annot.grl, function(x) {
   return(sort(c(rest, exon, utr)))
   
 }))
+
+# # For bug check
+# annot.grl <- GRangesList(lapply(1:length(annot.grl), function(i) {
+#   
+#   message(i)
+#   x <- annot.grl[[i]]
+#   exon <- x[x$type == "exon"]  
+#   utr <- x[x$type == "utr"]
+#   strand(utr) <- unique(strand(exon)) # Otherwise utr isn't stranded, but needed for setdiff later
+#   rest <- x[!x$type %in% c("utr", "exon")]
+#   
+#   exon <- GenomicRanges::setdiff(exon, utr, ignore.strand = FALSE)  
+#   mcols(exon)$type <- "exon"
+#   
+#   return(sort(c(rest, exon, utr)))
+#   
+# }))
 
 # Add gene name to labels
 gene_names <- gtf$gene_name[match(names(annot.grl), gtf$transcript_id)]
