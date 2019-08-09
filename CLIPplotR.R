@@ -296,5 +296,5 @@ p.annot <- p.annot@ggplot
 # ==========
 
 # plot_grid(p.iclip, p.annot, align = "hv", axis = "tlbr", nrow = 2, rel_heights = c(1, 2))
-ggsave(plot_grid(p.iclip, p.annot, align = "hv", axis = "tlbr", nrow = 2, rel_heights = c(1, 2)), height = 297, width = 210, units = "mm", filename = opt$output)
+ggsave(plot_grid(p.iclip, p.annot, align = "hv", axis = "tlbr", nrow = 2, rel_heights = c(1, 2)), height = 300, width = 300, units = "mm", filename = opt$output)
 message("Completed")
