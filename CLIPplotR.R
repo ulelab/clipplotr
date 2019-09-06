@@ -25,6 +25,7 @@ CheckAndLoad("optparse")
 
 option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "character", help = "Input iCLIP bedgraphs (space separated)"),
                     make_option(c("-l", "--label"), action = "store", type = "character", help = "iCLIP bedgraph labels (space separated)"),
+                    make_option(c("-c", "--colours"), action = "store", type = "character", help = "iCLIP bedgraph colours (space separated)"),                    
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference gtf (Gencode)"),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
                     make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize [default %default]", default = "libsize"),
@@ -230,6 +231,8 @@ xl_df <- as.data.frame(switch(opt$smoothing,
                               "none"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(smoothed= norm)))
 
 # Plot top half
+if(is.null(opt$colours)) {
+
 p.iclip <- ggplot(xl_df,aes(x=start,y=smoothed, group=sample, color=sample)) +
   geom_line() +
   labs(title = opt$region,
@@ -238,6 +241,21 @@ p.iclip <- ggplot(xl_df,aes(x=start,y=smoothed, group=sample, color=sample)) +
        colour = "") +
   scale_colour_tableau(palette = "Tableau 10") +
   theme_cowplot() + theme(legend.position = "top")
+
+  } else {
+
+    cols <- strsplit(opt$colours, " ")[[1]]
+
+    p.iclip <- ggplot(xl_df,aes(x=start,y=smoothed, group=sample, color=sample)) +
+      geom_line() +
+      labs(title = opt$region,
+           x = "",
+           y = "Crosslink signal",
+           colour = "") +
+      scale_colour_manual(values = cols) +
+      theme_cowplot() + theme(legend.position = "top")
+
+}
 
 # ==========
 # Part 2 - bottom half: gene structures
