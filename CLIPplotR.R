@@ -246,7 +246,7 @@ p.iclip <- ggplot(xl_df,aes(x=start,y=smoothed, group=sample, color=sample)) +
   } else {
 
     cols <- strsplit(opt$colours, " ")[[1]]
-
+    names(cols) <- track_names
     p.iclip <- ggplot(xl_df,aes(x=start,y=smoothed, group=sample, color=sample)) +
       geom_line() +
       labs(title = opt$region,
