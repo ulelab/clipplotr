@@ -240,7 +240,8 @@ p.iclip <- ggplot(xl_df,aes(x=start,y=smoothed, group=sample, color=sample)) +
        y = "Crosslink signal",
        colour = "") +
   scale_colour_tableau(palette = "Tableau 10") +
-  theme_cowplot() + theme(legend.position = "top")
+  theme_cowplot() + theme(legend.position = "top") +
+      xlim(start(region.gr),end(region.gr))
 
   } else {
 
@@ -253,7 +254,8 @@ p.iclip <- ggplot(xl_df,aes(x=start,y=smoothed, group=sample, color=sample)) +
            y = "Crosslink signal",
            colour = "") +
       scale_colour_manual(values = cols) +
-      theme_cowplot() + theme(legend.position = "top")
+      theme_cowplot() + theme(legend.position = "top") +
+      xlim(start(region.gr),end(region.gr))
 
 }
 
@@ -304,7 +306,8 @@ names(annot.grl) <- paste0(gene_names, " - ", names(annot.grl))
 
 p.annot <- ggplot(data = annot.grl) +
   geom_alignment(cds.rect.h = 0.1, length = unit(0.1, "cm"), fill = "black", stat = "identity") +
-  labs(x = "Coordinate")
+  labs(x = "Coordinate") +
+      xlim(start(region.gr),end(region.gr))
 
 # Select out ggplot object
 p.annot <- p.annot@ggplot
