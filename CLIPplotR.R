@@ -123,18 +123,16 @@ if(is.null(opt$region)) {
   
   region.gr <- genes.gr[grepl(opt$region, genes.gr$gene_id)]
   
-} else if(grepl("^[A-Z]", opt$region)) {
-  
-  # region.gr <- genes.gr[grepl(opt$region, genes.gr$gene_name)]
-  region.gr <- genes.gr[opt$region == genes.gr$gene_name]
-  
-} else {
+} else if(grepl(":", opt$region)) {
   
   region.gr <- GRanges(seqnames = Rle(sapply(strsplit(opt$region, ":"), "[[", 1)),
                        ranges = IRanges(start = as.integer(sapply(strsplit(opt$region, ":"), "[[", 2)),
                                         end = as.integer(sapply(strsplit(opt$region, ":"), "[[", 3))),
                        strand = Rle(sapply(strsplit(opt$region, ":"), "[[", 4)))
-  
+} else {
+  # region.gr <- genes.gr[grepl(opt$region, genes.gr$gene_name)]
+  region.gr <- genes.gr[opt$region == genes.gr$gene_name]  
+
 }
 
 seqlevels(region.gr) <- as.character(unique(seqnames(region.gr))) # Cut down to one seqlevels for later comparision
