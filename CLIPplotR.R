@@ -25,7 +25,8 @@ CheckAndLoad("optparse")
 
 option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "character", help = "Input iCLIP bedgraphs (space separated)"),
                     make_option(c("-l", "--label"), action = "store", type = "character", help = "iCLIP bedgraph labels (space separated)"),
-                    make_option(c("-c", "--colours"), action = "store", type = "character", help = "iCLIP bedgraph colours (space separated)"),                    
+                    make_option(c("-c", "--colours"), action = "store", type = "character", help = "iCLIP bedgraph colours (space separated)"),
+                    make_option(c("-f", "--groups"), action = "store", type = "character", help = "Grouping of iCLIP bedgraphs for separate plots (space separated"),                    
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference gtf (Gencode)"),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
                     make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize [default %default]", default = "libsize"),
@@ -91,6 +92,38 @@ for(package in biocpackages) {
 # opt <- list(region = "chr15:68206992:68210000:-", gtf = "gencode.v29.primary_assembly.annotation.gtf.gz")
 
 # ==========
+# Functions
+# ==========
+
+ImportiMapsBedgraph <- function(bedgraph.file) {
+  
+  bg <- import.bedGraph(bedgraph.file)
+  
+  # Assign strand based on score
+  strand(bg)[bg$score < 0] <- "-"
+  strand(bg)[bg$score > 0] <- "+"
+  
+  # Convert scores to positives now that strands assigned
+  bg$score <- abs(bg$score)
+  
+  return(bg)
+  
+}
+
+SubsetBedgraph <- function(gr, selected.region.gr) {
+  
+  xlinks.gr <- unlist(tile(selected.region.gr, width = 1))
+  
+  ol <- findOverlaps(xlinks.gr, gr)
+  xlinks.gr$score <- NA
+  xlinks.gr[queryHits(ol)]$score <- gr[subjectHits(ol)]$score
+  xlinks.gr$score[is.na(xlinks.gr$score)] <- 0
+  
+  return(xlinks.gr)
+  
+}
+
+# ==========
 # Part 0 - Create annotation and get relevant regions in bedgraphs
 # ==========
 
@@ -141,44 +174,13 @@ seqlevels(region.gr) <- as.character(unique(seqnames(region.gr))) # Cut down to 
 # Part 1 - top half: normalised and smoothed tracks
 # ==========
 
-ImportiMapsBedgraph <- function(bedgraph.file) {
-  
-  bg <- import.bedGraph(bedgraph.file)
-  
-  # Assign strand based on score
-  strand(bg)[bg$score < 0] <- "-"
-  strand(bg)[bg$score > 0] <- "+"
-  
-  # Convert scores to positives now that strands assigned
-  bg$score <- abs(bg$score)
-  
-  return(bg)
-  
-}
-
 # Read in xlinks
 message("Loading bedgraphs")
 xlinks <- strsplit(opt$xlinks, " ")[[1]] %>% lapply(., ImportiMapsBedgraph)
 libSizes <- lapply(xlinks, function(x) { sum(abs(x$score)) })
 
 # Subset for region and add in 0 count position
-xlinks <- lapply(xlinks, function(x) {
-  
-  # Subset bedgraph to region
-  xlinks.gr <- subsetByOverlaps(x, region.gr, ignore.strand = FALSE)
-  
-  # Get single position 0 counts
-  zero.gr <- setdiff(region.gr, xlinks.gr)
-  zero.gr <- unlist(tile(zero.gr, width = 1))
-  zero.gr$score <- 0
-  
-  # Combine and sanity check
-  xlinks.gr <- sort(c(xlinks.gr, zero.gr))
-  
-  stopifnot(all(width(xlinks.gr) == 1 & reduce(xlinks.gr) == region.gr))
-  return(xlinks.gr)
-  
-})
+xlinks <- lapply(xlinks, function(x) SubsetBedgraph(gr = x, selected.region.gr = region.gr))
 
 # Names of bedgraphs : If name is supplied use that, if not then generate a name from the file name
 if (!is.null(opt$label)) {
@@ -228,6 +230,14 @@ xl_df <- as.data.frame(switch(opt$smoothing,
                               "rollmean"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(smoothed= rollmean(norm, opt$smoothing_window, fill=0)),
                               "none"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(smoothed= norm)))
 
+# Assign groups
+if(!is.null(opt$groups)) {
+
+  groups.df <- data.table(sample = track_names, grp = strsplit(opt$group, " ")[[1]])
+  xl_df <- merge(xl_df, groups.df, by = sample)
+
+}
+
 # Plot top half
 if(is.null(opt$colours)) {
 
@@ -245,6 +255,7 @@ p.iclip <- ggplot(xl_df,aes(x=start,y=smoothed, group=sample, color=sample)) +
 
     cols <- strsplit(opt$colours, " ")[[1]]
     names(cols) <- track_names
+
     p.iclip <- ggplot(xl_df,aes(x=start,y=smoothed, group=sample, color=sample)) +
       geom_line() +
       labs(title = opt$region,
@@ -257,44 +268,51 @@ p.iclip <- ggplot(xl_df,aes(x=start,y=smoothed, group=sample, color=sample)) +
 
 }
 
+# Facet if groups
+if(!is.null(opt$groups)) {
+
+  p.iclip <- p.iclip + facet_grid(grp ~ .)
+
+}
+
 # ==========
 # Part 2 - bottom half: gene structures
 # ==========
 
 message("Creating annotation track")
 
-# First deal with purely intronic regions, because biovisbase doesn't handle this
-if(is.null(exonsByOverlaps(TxDb, region.gr)$tx_id)){
-  overlapping_tscripts = transcriptsByOverlaps(TxDb, region.gr)$tx_id
-  overlapping_tscripts_name = transcriptsByOverlaps(TxDb, region.gr)$tx_name
-  introns_in_trscripts = intronsByTranscript(TxDb)[overlapping_tscripts,]
+# # First deal with purely intronic regions, because biovisbase doesn't handle this
+# if(is.null(exonsByOverlaps(TxDb, region.gr)$tx_id)){
+#   overlapping_tscripts = transcriptsByOverlaps(TxDb, region.gr)$tx_id
+#   overlapping_tscripts_name = transcriptsByOverlaps(TxDb, region.gr)$tx_name
+#   introns_in_trscripts = intronsByTranscript(TxDb)[overlapping_tscripts,]
   
-  #Get overlapping introns
+#   #Get overlapping introns
   
-  if (length(overlapping_tscripts)>1){
-    annot.gr=list()
-    for (i in 1:length(overlapping_tscripts)){
-      intron_reg = region.gr[subjectHits(findOverlaps(region.gr, introns_in_trscripts[[i]])),]
-      intron_reg$type="gap"
-      intron_reg$tx_id=overlapping_tscripts[[i]]
-      intron_reg$tx_name=overlapping_tscripts_name[[i]]}
-    annot.gr = c(final_int_reg,intron_reg)
-  } else {
-    intron_reg = region.gr[subjectHits(findOverlaps(region.gr, introns_in_trscripts)),]
-    intron_reg$type="gap"
-    intron_reg$tx_id=overlapping_tscripts
-    intron_reg$tx_name=overlapping_tscripts_name
-    annot.gr = intron_reg
-  }
-} else {
-annot.gr <- biovizBase::crunch(TxDb, which = region.gr)
-}
+#   if (length(overlapping_tscripts)>1){
+#     annot.gr=list()
+#     for (i in 1:length(overlapping_tscripts)){
+#       intron_reg = region.gr[subjectHits(findOverlaps(region.gr, introns_in_trscripts[[i]])),]
+#       intron_reg$type="gap"
+#       intron_reg$tx_id=overlapping_tscripts[[i]]
+#       intron_reg$tx_name=overlapping_tscripts_name[[i]]}
+#     annot.gr = c(final_int_reg,intron_reg)
+#   } else {
+#     intron_reg = region.gr[subjectHits(findOverlaps(region.gr, introns_in_trscripts)),]
+#     intron_reg$type="gap"
+#     intron_reg$tx_id=overlapping_tscripts
+#     intron_reg$tx_name=overlapping_tscripts_name
+#     annot.gr = intron_reg
+#   }
+# } else {
+# annot.gr <- biovizBase::crunch(TxDb, which = region.gr)
+# }
 
-if (is.na(annot.gr)){
-  ggsave(p.iclip,height = 300, width = 300, units = "mm", filename = opt$output)
-  message("Completed")
-  quit(save="no")
-}
+# if (is.na(annot.gr)){
+#   ggsave(p.iclip,height = 300, width = 300, units = "mm", filename = opt$output)
+#   message("Completed")
+#   quit(save="no")
+# }
 
 
 annot.gr$tx_name <- as.character(annot.gr$tx_name)
@@ -304,7 +322,7 @@ annot.grl <- split(annot.gr, annot.gr$tx_name)
 # Need to trim exons so they don't overlap utrs to ensure they aren't overplotted
 # but only if there are exons 
 annot.grl <- GRangesList(lapply(annot.grl, function(x) {
-  if(grepl("exon",x$type)){
+  if(any(grepl("exon",x$type))){
     exon <- x[x$type == "exon"]  
     utr <- x[x$type == "utr"]
     strand(utr) <- unique(strand(exon)) # Otherwise utr isn't stranded, but needed for setdiff later
