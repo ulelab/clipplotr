@@ -33,6 +33,8 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize [default %default]", default = "libsize"),
                     make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, spline, gaussian [default %default]", default = "rollmean"),
                     make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window [default %default]", default = 100),
+                    make_option(c("-x", "--size_x"), action = "store", type = "integer", help = "Plot size in mm (x)", default = 300),
+                    make_option(c("-y", "--size_y"), action = "store", type = "integer", help = "Plot size in mm (y)", default = 300),
                     make_option(c("-o", "--output", action = "store", type = "character", help = "Output plot filename")))
 opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
@@ -409,5 +411,5 @@ p.annot <- p.annot@ggplot
 # ==========
 
 # plot_grid(p.iclip, p.annot, align = "hv", axis = "tlbr", nrow = 2, rel_heights = c(1, 2))
-ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(1, 1, 2)), height = 300, width = 300, units = "mm", filename = opt$output)
+ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(1, 1, 2)), height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
 message("Completed")
