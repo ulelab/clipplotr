@@ -3,7 +3,7 @@
 # Script to plot multiple CLIP tracks with gene structures
 # A. M. Chakrabarti
 # C. Capitanchik
-# Last updated: 10th July 2019
+# Last updated: 9th February 2020
 
 # ==========
 # Preamble
@@ -26,7 +26,8 @@ CheckAndLoad("optparse")
 option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "character", help = "Input iCLIP bedgraphs (space separated)"),
                     make_option(c("-l", "--label"), action = "store", type = "character", help = "iCLIP bedgraph labels (space separated)"),
                     make_option(c("-c", "--colours"), action = "store", type = "character", help = "iCLIP bedgraph colours (space separated)"),
-                    make_option(c("-f", "--groups"), action = "store", type = "character", help = "Grouping of iCLIP bedgraphs for separate plots (space separated"),                    
+                    make_option(c("-f", "--groups"), action = "store", type = "character", help = "Grouping of iCLIP bedgraphs for separate plots (space separated"),
+                    make_option(c("-p", "--peaks"), action = "store", type = "character", help = "BED file of peaks (space separated"),                    
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference gtf (Gencode)"),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
                     make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize [default %default]", default = "libsize"),
@@ -171,7 +172,7 @@ if(is.null(opt$region)) {
 seqlevels(region.gr) <- as.character(unique(seqnames(region.gr))) # Cut down to one seqlevels for later comparision
 
 # ==========
-# Part 1 - top half: normalised and smoothed tracks
+# Part 1a - top half: normalised and smoothed tracks
 # ==========
 
 # Read in xlinks
@@ -276,6 +277,44 @@ if(!is.null(opt$groups)) {
 }
 
 # ==========
+# Part 1b - top half: peak annotation
+# ==========
+
+# TODO: add in peak names as an option to supply
+
+if(!is.null(opt$peaks)) {
+
+  peak.files <- strsplit(opt$colours, " ")[[1]]
+  peaks.grl <- lapply(peaks.files, import.bed)
+  peaks.grl <- lapply(peaks.grl, function(x) subsetByOverlaps(x, region.gr, ignore.strand = FALSE))
+
+  peaks_df <- suppressWarnings(dplyr::bind_rows(lapply(peaks.grl, as.data.frame)))
+  peaks_df$exp <- rep(gsub(".bed", "", basename(peaks.files)), elementNROWS(peaks.grl))
+  peaks_df$centre <- with(peaks_df, start + width/2)
+
+  if(nrow(peaks_df) == 0) {
+
+    p.peaks <- ggplot()
+
+  } else {
+
+  p.peaks <- ggplot(peaks_df, aes(x = centre, width = width, y = exp)) +
+    geom_tile() +
+    scale_y_discrete(breaks = gsub(".bed", "", basename(peaks.files)),
+                     limits = gsub(".bed", "", basename(peaks.files))) +
+    xlim(start(region.gr), end(region.gr)) +
+    labs(y = "",
+         x = "")
+
+  }
+
+} else {
+
+  p.peaks <- ggplot()
+
+}
+
+# ==========
 # Part 2 - bottom half: gene structures
 # ==========
 
@@ -370,5 +409,5 @@ p.annot <- p.annot@ggplot
 # ==========
 
 # plot_grid(p.iclip, p.annot, align = "hv", axis = "tlbr", nrow = 2, rel_heights = c(1, 2))
-ggsave(plot_grid(p.iclip, p.annot, align = "hv", axis = "tlbr", nrow = 2, rel_heights = c(1, 2)), height = 300, width = 300, units = "mm", filename = opt$output)
+ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(1, 1, 2)), height = 300, width = 300, units = "mm", filename = opt$output)
 message("Completed")
