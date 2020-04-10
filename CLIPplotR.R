@@ -286,7 +286,7 @@ if(!is.null(opt$groups)) {
 
 if(!is.null(opt$peaks)) {
 
-  peak.files <- strsplit(opt$colours, " ")[[1]]
+  peak.files <- strsplit(opt$peaks, " ")[[1]]
   peaks.grl <- lapply(peaks.files, import.bed)
   peaks.grl <- lapply(peaks.grl, function(x) subsetByOverlaps(x, region.gr, ignore.strand = FALSE))
 
