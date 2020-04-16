@@ -346,14 +346,14 @@ message("Creating annotation track")
 #     annot.gr = intron_reg
 #   }
 # } else {
-# annot.gr <- biovizBase::crunch(TxDb, which = region.gr)
+annot.gr <- biovizBase::crunch(TxDb, which = region.gr)
 # }
 
-# if (is.na(annot.gr)){
-#   ggsave(p.iclip,height = 300, width = 300, units = "mm", filename = opt$output)
-#   message("Completed")
-#   quit(save="no")
-# }
+if (is.na(annot.gr)){
+  ggsave(p.iclip,height = 300, width = 300, units = "mm", filename = opt$output)
+  message("Completed")
+  quit(save="no")
+}
 
 
 annot.gr$tx_name <- as.character(annot.gr$tx_name)
