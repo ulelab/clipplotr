@@ -296,7 +296,7 @@ if(!is.null(opt$peaks)) {
 
   if(nrow(peaks_df) == 0) {
 
-    p.peaks <- ggplot()
+    p.peaks <- ggplot() + theme_cowplot() + theme(axis.line = element_blank())
 
   } else {
 
@@ -306,7 +306,8 @@ if(!is.null(opt$peaks)) {
                      limits = gsub(".bed", "", basename(peaks.files))) +
     xlim(start(region.gr), end(region.gr)) +
     labs(y = "",
-         x = "")
+         x = "") +
+    theme_cowplot()
 
   }
 
@@ -401,7 +402,8 @@ names(annot.grl) <- paste0(gene_names, " - ", names(annot.grl))
 p.annot <- ggplot(data = annot.grl) +
   geom_alignment(cds.rect.h = 0.1, length = unit(0.1, "cm"), fill = "black", stat = "identity") +
   labs(x = "Coordinate") +
-      xlim(start(region.gr),end(region.gr))
+      xlim(start(region.gr),end(region.gr)) +
+  theme_cowplot() + theme(axis.line.y = element_blank())
 
 # Select out ggplot object
 p.annot <- p.annot@ggplot
