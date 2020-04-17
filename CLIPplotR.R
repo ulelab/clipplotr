@@ -33,7 +33,7 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize [default %default]", default = "libsize"),
                     make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, spline, gaussian [default %default]", default = "rollmean"),
                     make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window [default %default]", default = 100),
-                    make_option(c("-x", "--size_x"), action = "store", type = "integer", help = "Plot size in mm (x)", default = 300),
+                    make_option(c("-z", "--size_x"), action = "store", type = "integer", help = "Plot size in mm (x)", default = 300),
                     make_option(c("-y", "--size_y"), action = "store", type = "integer", help = "Plot size in mm (y)", default = 300),
                     make_option(c("-o", "--output", action = "store", type = "character", help = "Output plot filename")))
 opt_parser = OptionParser(option_list = option_list)
