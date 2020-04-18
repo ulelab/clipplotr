@@ -452,40 +452,7 @@ if(opt$annotation == "original") {
 
 suppressPackageStartupMessages(library(ggbio))
 
-# # First deal with purely intronic regions, because biovisbase doesn't handle this
-# if(is.null(exonsByOverlaps(TxDb, region.gr)$tx_id)){
-#   overlapping_tscripts = transcriptsByOverlaps(TxDb, region.gr)$tx_id
-#   overlapping_tscripts_name = transcriptsByOverlaps(TxDb, region.gr)$tx_name
-#   introns_in_trscripts = intronsByTranscript(TxDb)[overlapping_tscripts,]
-  
-#   #Get overlapping introns
-  
-#   if (length(overlapping_tscripts)>1){
-#     annot.gr=list()
-#     for (i in 1:length(overlapping_tscripts)){
-#       intron_reg = region.gr[subjectHits(findOverlaps(region.gr, introns_in_trscripts[[i]])),]
-#       intron_reg$type="gap"
-#       intron_reg$tx_id=overlapping_tscripts[[i]]
-#       intron_reg$tx_name=overlapping_tscripts_name[[i]]}
-#     annot.gr = c(final_int_reg,intron_reg)
-#   } else {
-#     intron_reg = region.gr[subjectHits(findOverlaps(region.gr, introns_in_trscripts)),]
-#     intron_reg$type="gap"
-#     intron_reg$tx_id=overlapping_tscripts
-#     intron_reg$tx_name=overlapping_tscripts_name
-#     annot.gr = intron_reg
-#   }
-# } else {
 annot.gr <- biovizBase::crunch(TxDb, which = region.gr)
-# }
-
-# if (is.na(annot.gr)){
-#   ggsave(p.iclip,height = 300, width = 300, units = "mm", filename = opt$output)
-#   message("Completed")
-#   quit(save="no")
-# }
-
-
 annot.gr$tx_name <- as.character(annot.gr$tx_name)
 annot.grl <- split(annot.gr, annot.gr$tx_name)
 
@@ -506,23 +473,6 @@ annot.grl <- GRangesList(lapply(annot.grl, function(x) {
       return(x)
   }
 }))
-
-# # For bug check
-# annot.grl <- GRangesList(lapply(1:length(annot.grl), function(i) {
-#   
-#   message(i)
-#   x <- annot.grl[[i]]
-#   exon <- x[x$type == "exon"]  
-#   utr <- x[x$type == "utr"]
-#   strand(utr) <- unique(strand(exon)) # Otherwise utr isn't stranded, but needed for setdiff later
-#   rest <- x[!x$type %in% c("utr", "exon")]
-#   
-#   exon <- GenomicRanges::setdiff(exon, utr, ignore.strand = FALSE)  
-#   mcols(exon)$type <- "exon"
-#   
-#   return(sort(c(rest, exon, utr)))
-#   
-# }))
 
 # Add gene name to labels
 gene_names <- gtf$gene_name[match(names(annot.grl), gtf$transcript_id)]
