@@ -9,19 +9,7 @@
 # Preamble
 # ==========
 
-CheckAndLoad <- function(package) {
-  
-  if(!suppressPackageStartupMessages(require(package, character.only = TRUE, quietly = TRUE))) {
-    
-    message("Installing ", package)
-    install.packages(package, character.only = TRUE, repos = "https://cloud.r-project.org")
-    suppressPackageStartupMessages(library(package, character.only = TRUE, quietly = TRUE))
-    
-  }
-  
-}
-
-CheckAndLoad("optparse")
+suppressPackageStartupMessages(library(optparse))
 
 option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "character", help = "Input iCLIP bedgraphs (space separated)"),
                     make_option(c("-l", "--label"), action = "store", type = "character", help = "iCLIP bedgraph labels (space separated)"),
@@ -39,35 +27,21 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
 opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
 
-# Load CRAN packages
-packages <- c("BiocManager", "ggplot2", "ggthemes", "cowplot", "smoother", "zoo", "dplyr")
-for(package in packages) CheckAndLoad(package)
-
-# Load Bioconductor packages
-biocpackages <- c("rtracklayer", "GenomicFeatures", "ggbio")
-for(package in biocpackages) {
-  
-  if(!suppressPackageStartupMessages(require(package, character.only = TRUE, quietly = TRUE))) {
-    
-    message("Installing ", package)
-    BiocManager::install(package)
-    suppressPackageStartupMessages(library(package, character.only = TRUE, quietly = TRUE))
-    
-  }  
-  
-}
-
 # print(opt)
 
-# suppressPackageStartupMessages(library(rtracklayer))
-# suppressPackageStartupMessages(library(GenomicFeatures))
-# suppressPackageStartupMessages(library(ggplot2))
-# suppressPackageStartupMessages(library(ggthemes))
-# suppressPackageStartupMessages(library(cowplot))
-# suppressPackageStartupMessages(library(smoother))
-# suppressPackageStartupMessages(library(zoo))
-# suppressPackageStartupMessages(library(dplyr))
-# suppressPackageStartupMessages(library(ggbio))
+# ==========
+# Load libraries
+# ==========
+
+suppressPackageStartupMessages(library(rtracklayer))
+suppressPackageStartupMessages(library(GenomicFeatures))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(ggthemes))
+suppressPackageStartupMessages(library(cowplot))
+suppressPackageStartupMessages(library(smoother))
+suppressPackageStartupMessages(library(zoo))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(ggbio))
 
 # opt <- list(xlinks = "../tdp43_studentExercise/tardbp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph ../tdp43_studentExercise/tardbp-ngfp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph", #from https://imaps.genialis.com/iclip
 #            # track_names = "tdp43_1 tdp43_2", # or can be NULL 
