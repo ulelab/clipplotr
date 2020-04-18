@@ -40,7 +40,7 @@ suppressPackageStartupMessages(library(ggthemes))
 suppressPackageStartupMessages(library(cowplot))
 suppressPackageStartupMessages(library(smoother))
 suppressPackageStartupMessages(library(zoo))
-suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(data.table))
 suppressPackageStartupMessages(library(ggbio))
 
 # opt <- list(xlinks = "../tdp43_studentExercise/tardbp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph ../tdp43_studentExercise/tardbp-ngfp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph", #from https://imaps.genialis.com/iclip
@@ -153,7 +153,8 @@ seqlevels(region.gr) <- as.character(unique(seqnames(region.gr))) # Cut down to 
 
 # Read in xlinks
 message("Loading bedgraphs")
-xlinks <- strsplit(opt$xlinks, " ")[[1]] %>% lapply(., ImportiMapsBedgraph)
+xlink.files <- strsplit(opt$xlinks, " ")[[1]]
+xlinks <- lapply(xlink.files, ImportiMapsBedgraph)
 libSizes <- lapply(xlinks, function(x) { sum(abs(x$score)) })
 
 # Subset for region and add in 0 count position
@@ -170,55 +171,46 @@ if (!is.null(opt$label)) {
   
 }
 
-# Create dataframe for plotting
-xlinks_df <- lapply(xlinks, as.data.frame)
-
-for (i in 1:length(xlinks_df)) {
+# Create datatable for plotting
+xlinks.dt <- lapply(seq_along(xlinks), function(i) {
   
-  xlinks_df[[i]]$sample <- track_names[[i]]
-  xlinks_df[[i]]$libSize <- libSizes[[i]]
+  dt <- as.data.table(xlinks[[i]])
+  dt$sample <- track_names[[i]]
+  dt$libSize <- libSizes[[i]]
+  return(dt)
   
-}
-
-xl_df <- suppressWarnings(dplyr::bind_rows(xlinks_df))
-
-# TODO: Fix this warning:
-# Warning messages:
-#   1: In bind_rows_(x, .id) : Unequal factor levels: coercing to character
-# 2: In bind_rows_(x, .id) :
-#   binding character and factor vector, coercing into character vector
-# 3: In bind_rows_(x, .id) :
-#   binding character and factor vector, coercing into character vector
-
-xl_df <- as.data.frame(xl_df) # Isn't it already a data.frame?
+})
+xlinks.dt <- rbindlist(xlinks.dt)  
+setkey(xlinks.dt, sample)
 
 # Do the normalisation
 message("Normalising")
-xl_df <- as.data.frame(switch(opt$normalisation, 
-                              "libsize"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(norm=(score * 1e6)/libSize),
-                              "maxpeak"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(norm=score/max(score)),
-                              "none"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(norm=score)))
-
+xlinks.dt[, norm := switch(opt$normalisation, 
+                           "libsize" = (score * 1e6)/libSize,
+                           "maxpeak" = score/max(score),
+                           "none" = score), 
+          by = sample]
 
 # Do the smoothing
 message("Smoothing")
-xl_df <- as.data.frame(switch(opt$smoothing, 
-                              "gaussian"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(smoothed= smth.gaussian(norm, window=opt$smoothing_window)),
-                              "rollmean"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(smoothed= rollmean(norm, opt$smoothing_window, fill=0)),
-                              "none"=xl_df %>% dplyr::group_by(sample) %>% dplyr::mutate(smoothed= norm)))
+xlinks.dt[, smoothed := switch(opt$smoothing, 
+                               "gaussian" = smth.gaussian(norm, window = opt$smoothing_window),
+                               "rollmean" = rollmean(norm, opt$smoothing_window, fill = 0),
+                               "none" = norm), 
+          by = sample]
 
 # Assign groups
 if(!is.null(opt$groups)) {
 
-  groups.df <- data.table(sample = track_names, grp = strsplit(opt$group, " ")[[1]])
-  xl_df <- merge(xl_df, groups.df, by = sample)
+  groups.dt <- data.table(sample = track_names, grp = strsplit(opt$group, " ")[[1]])
+  xlinks.dt <- merge(xlinks.dt, groups.dt, by = sample)
 
 }
 
 # Plot top half
 if(is.null(opt$colours)) {
 
-p.iclip <- ggplot(xl_df,aes(x=start,y=smoothed, group=sample, color=sample)) +
+p.iclip <- ggplot(xlinks.dt, aes(x = start, y = smoothed, group = sample, color = sample)) +
   geom_line() +
   labs(title = opt$region,
        x = "",
@@ -233,7 +225,7 @@ p.iclip <- ggplot(xl_df,aes(x=start,y=smoothed, group=sample, color=sample)) +
     cols <- strsplit(opt$colours, " ")[[1]]
     names(cols) <- track_names
 
-    p.iclip <- ggplot(xl_df,aes(x=start,y=smoothed, group=sample, color=sample)) +
+    p.iclip <- ggplot(xlinks.dt, aes(x = start, y = smoothed, group = sample, color = sample)) +
       geom_line() +
       labs(title = opt$region,
            x = "",
@@ -264,17 +256,17 @@ if(!is.null(opt$peaks)) {
   peaks.grl <- lapply(peaks.files, import.bed)
   peaks.grl <- lapply(peaks.grl, function(x) subsetByOverlaps(x, region.gr, ignore.strand = FALSE))
 
-  peaks_df <- suppressWarnings(dplyr::bind_rows(lapply(peaks.grl, as.data.frame)))
-  peaks_df$exp <- rep(gsub(".bed", "", basename(peaks.files)), elementNROWS(peaks.grl))
-  peaks_df$centre <- with(peaks_df, start + width/2)
+  peaks.dt <- rbindlist(lapply(peaks.grl, as.data.table))
+  peaks.dt$exp <- rep(gsub(".bed", "", basename(peaks.files)), elementNROWS(peaks.grl))
+  peaks.dt$centre <- with(peaks.dt, start + width/2) # Replace this with data.table syntax, but need to check groups first
 
-  if(nrow(peaks_df) == 0) {
+  if(nrow(peaks.dt) == 0) {
 
     p.peaks <- ggplot() + theme_cowplot() + theme(axis.line = element_blank())
 
   } else {
 
-  p.peaks <- ggplot(peaks_df, aes(x = centre, width = width, y = exp)) +
+  p.peaks <- ggplot(peaks.dt, aes(x = centre, width = width, y = exp)) +
     geom_tile() +
     scale_y_discrete(breaks = gsub(".bed", "", basename(peaks.files)),
                      limits = gsub(".bed", "", basename(peaks.files))) +
