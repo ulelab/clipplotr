@@ -14,21 +14,54 @@ suppressPackageStartupMessages(library(optparse))
 option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "character", help = "Input iCLIP bedgraphs (space separated)"),
                     make_option(c("-l", "--label"), action = "store", type = "character", help = "iCLIP bedgraph labels (space separated)"),
                     make_option(c("-c", "--colours"), action = "store", type = "character", help = "iCLIP bedgraph colours (space separated)"),
-                    make_option(c("-f", "--groups"), action = "store", type = "character", help = "Grouping of iCLIP bedgraphs for separate plots (space separated"),
-                    make_option(c("-p", "--peaks"), action = "store", type = "character", help = "BED file of peaks (space separated"),                    
-                    make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference gtf (Gencode)"),
+                    make_option(c("", "--groups"), action = "store", type = "character", help = "Grouping of iCLIP bedgraphs for separate plots (space separated"),
+                    make_option(c("-p", "--peaks"), action = "store", type = "character", help = "BED file of peaks (space separated)"),                    
+                    make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference GTF file (Gencode)"),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
                     make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize [default %default]", default = "libsize"),
                     make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, spline, gaussian [default %default]", default = "rollmean"),
                     make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window [default %default]", default = 100),
                     make_option(c("-a", "--annotation"), action = "store", type = "character", help = "Annotation options: original, gene, transcript, none [default %default]", default = "original"),
-                    make_option(c("-z", "--size_x"), action = "store", type = "integer", help = "Plot size in mm (x)", default = 210),
-                    make_option(c("-y", "--size_y"), action = "store", type = "integer", help = "Plot size in mm (y)", default = 297),
-                    make_option(c("-o", "--output", action = "store", type = "character", help = "Output plot filename")))
+                    make_option(c("", "--size_x"), action = "store", type = "integer", help = "Plot size in mm (x) [default: %default]", default = 210),
+                    make_option(c("", "--size_y"), action = "store", type = "integer", help = "Plot size in mm (y) [default: %default]", default = 297),
+                    make_option(c("-o", "--output"), action = "store", type = "character", help = "Output plot filename"))
+
 opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
 
 # print(opt)
+
+# ==========
+# Checks for minimum parameters
+# ==========
+
+if(is.null(opt$xlinks)) {
+
+  message("ERROR: No iCLIP bedgraphs supplied")
+  quit(save = "no")
+
+}
+
+if(is.null(opt$gtf)) {
+
+  message("ERROR: No Reference GTF supplied")
+  quit(save = "no")
+
+}
+
+if(is.null(opt$region)) {
+
+  message("ERROR: No region defined")
+  quit(save = "no")
+
+}
+
+if(is.null(opt$output)) {
+
+  message("ERROR: No output defined")
+  quit(save = "no")
+
+}
 
 # ==========
 # Load libraries
