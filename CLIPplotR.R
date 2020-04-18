@@ -3,7 +3,7 @@
 # Script to plot multiple CLIP tracks with gene structures
 # A. M. Chakrabarti
 # C. Capitanchik
-# Last updated: 9th February 2020
+# Last updated: 17th April 2020
 
 # ==========
 # Preamble
@@ -286,7 +286,7 @@ if(!is.null(opt$groups)) {
 
 if(!is.null(opt$peaks)) {
 
-  peak.files <- strsplit(opt$peaks, " ")[[1]]
+  peaks.files <- strsplit(opt$peaks, " ")[[1]]
   peaks.grl <- lapply(peaks.files, import.bed)
   peaks.grl <- lapply(peaks.grl, function(x) subsetByOverlaps(x, region.gr, ignore.strand = FALSE))
 
@@ -313,7 +313,7 @@ if(!is.null(opt$peaks)) {
 
 } else {
 
-  p.peaks <- ggplot()
+  p.peaks <- ggplot() + theme_cowplot() + theme(axis.line = element_blank())
 
 }
 
@@ -350,11 +350,11 @@ message("Creating annotation track")
 annot.gr <- biovizBase::crunch(TxDb, which = region.gr)
 # }
 
-if (is.na(annot.gr)){
-  ggsave(p.iclip,height = 300, width = 300, units = "mm", filename = opt$output)
-  message("Completed")
-  quit(save="no")
-}
+# if (is.na(annot.gr)){
+#   ggsave(p.iclip,height = 300, width = 300, units = "mm", filename = opt$output)
+#   message("Completed")
+#   quit(save="no")
+# }
 
 
 annot.gr$tx_name <- as.character(annot.gr$tx_name)
