@@ -21,8 +21,9 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize [default %default]", default = "libsize"),
                     make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, spline, gaussian [default %default]", default = "rollmean"),
                     make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window [default %default]", default = 100),
-                    make_option(c("-z", "--size_x"), action = "store", type = "integer", help = "Plot size in mm (x)", default = 300),
-                    make_option(c("-y", "--size_y"), action = "store", type = "integer", help = "Plot size in mm (y)", default = 300),
+                    make_option(c("-a", "--annotation"), action = "store", type = "character", help = "Annotation options: original, gene, transcript [default %default]", default = "original"),
+                    make_option(c("-z", "--size_x"), action = "store", type = "integer", help = "Plot size in mm (x)", default = 210),
+                    make_option(c("-y", "--size_y"), action = "store", type = "integer", help = "Plot size in mm (y)", default = 297),
                     make_option(c("-o", "--output", action = "store", type = "character", help = "Output plot filename")))
 opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
@@ -41,7 +42,6 @@ suppressPackageStartupMessages(library(cowplot))
 suppressPackageStartupMessages(library(smoother))
 suppressPackageStartupMessages(library(zoo))
 suppressPackageStartupMessages(library(data.table))
-suppressPackageStartupMessages(library(ggbio))
 
 # opt <- list(xlinks = "../tdp43_studentExercise/tardbp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph ../tdp43_studentExercise/tardbp-ngfp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph", #from https://imaps.genialis.com/iclip
 #            # track_names = "tdp43_1 tdp43_2", # or can be NULL 
@@ -289,6 +289,60 @@ if(!is.null(opt$peaks)) {
 
 message("Creating annotation track")
 
+# ==========
+# Plot gene kind of structure
+# ==========
+
+if(opt$annotation == "gene") {
+
+exons_g.grl <- exonsBy(TxDb, by = "gene")
+
+sel.genes <- subsetByOverlaps(genes.gr, region.gr)
+sel.exons <- exons(TxDb, filter = list(gene_id = sel.genes$gene_id), columns = "gene_id")
+
+# Region (for arrows)
+region.gr$gene_id <- NULL
+region.tiled <- rep(region.gr, length(sel.genes)) # Create one for each gene
+region.tiled <- tile(region.tiled, width = 500)
+
+sel.region.tiled <- GRangesList(lapply(seq_along(sel.genes), function(i) {
+  gr <- subsetByOverlaps(region.tiled[[i]], sel.genes[i], type = "any")
+  # Need to adjust for ends
+  start(gr[1]) <- start(sel.genes[i])
+  end(gr[length(gr)]) <- end(sel.genes[i])
+  return(gr)
+}))
+
+names(sel.region.tiled) <- sel.genes$gene_id
+sel.region.tiled.dt <- as.data.table(sel.region.tiled)
+setnames(sel.region.tiled.dt, "group_name", "gene_id")
+
+# Exons
+sel.exons.dt <- as.data.table(sel.exons)
+sel.exons.dt$gene_id <- as.character(sel.exons.dt$gene_id) # otherwise type is AsIs
+sel.exons.dt <- merge(sel.exons.dt, unique(sel.region.tiled.dt[, .(group, gene_id)]), by = "gene_id")
+
+# Plot
+p.annot <- ggplot() +
+  geom_segment(data = sel.region.tiled.dt, mapping = aes(x = start, xend = end - 10, y = group, yend = group), arrow = arrow(length = unit(0.1, "cm")), colour = "grey50") +
+  geom_rect(data = sel.exons.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.25, ymax = group + 0.25, fill = gene_id)) +
+  theme_cowplot() + theme(axis.line.y = element_blank(), axis.ticks.y = element_blank(), axis.text.y = element_blank(), legend.position = "bottom") +
+  scale_fill_tableau() +
+  labs(x = "Coordinate",
+       y = "",
+       fill = "") +
+  coord_cartesian(xlim = c(start(region.gr), end(region.gr)))
+
+}
+
+# ==========
+# Old style
+# ==========
+
+if(opt$annotation == "original") {
+
+suppressPackageStartupMessages(library(ggbio))
+
 # # First deal with purely intronic regions, because biovisbase doesn't handle this
 # if(is.null(exonsByOverlaps(TxDb, region.gr)$tx_id)){
 #   overlapping_tscripts = transcriptsByOverlaps(TxDb, region.gr)$tx_id
@@ -374,10 +428,21 @@ p.annot <- ggplot(data = annot.grl) +
 # Select out ggplot object
 p.annot <- p.annot@ggplot
 
+}
+
 # ==========
 # Part 3 - combine plots
 # ==========
 
 # plot_grid(p.iclip, p.annot, align = "hv", axis = "tlbr", nrow = 2, rel_heights = c(1, 2))
-ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(1, 1, 2)), height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
+
+if(opt$annotation == "original") {
+  ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(1, 0.5, 2)), height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
+}
+
+if(opt$annotation == "gene") {
+  ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(2, 1, 1)), height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
+}
+
+
 message("Completed")
