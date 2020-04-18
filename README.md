@@ -1,6 +1,7 @@
 # CLIPplotR
-Plotting multiple iCLIP tracks across genes/regions with a range of normalisation and smoothing options.
-Run from command line eg.:
+Plotting multiple iCLIP tracks across genes/regions with a range of normalisation and smoothing options with peak and annotation tracks.
+
+Run from command line e.g.:
 `Rscript --vanilla CLIPplotR.R --xlinks clip1.bedgraph clip2.bedgraph --gtf genome.gtf --region ENSMUSG00000037400 --output finalgraph.pdf`
 
 **To get all the options with explanation, run:**
@@ -14,9 +15,3 @@ Run from command line eg.:
 --smoothing_window, default = 100
 
 **Output:** a graph saved in the file format you give as the “output file name” eg. graph.pdf will save as a pdf.
-
-**Still to do:**
-* Make it so you can input the graph output size, at the moment if you want to change that you need to edit the last line of the script.
-* Add Rupert’s code so that you can show signal on mature transcripts (ie. without introns).
-
-
