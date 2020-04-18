@@ -14,16 +14,18 @@ suppressPackageStartupMessages(library(optparse))
 option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "character", help = "Input iCLIP bedgraphs (space separated)"),
                     make_option(c("-l", "--label"), action = "store", type = "character", help = "iCLIP bedgraph labels (space separated)"),
                     make_option(c("-c", "--colours"), action = "store", type = "character", help = "iCLIP bedgraph colours (space separated)"),
-                    make_option(c("-f", "--groups"), action = "store", type = "character", help = "Grouping of iCLIP bedgraphs for separate plots (space separated"),
+                    make_option(c("", "--groups"), action = "store", type = "character", help = "Grouping of iCLIP bedgraphs for separate plots (space separated"),
                     make_option(c("-p", "--peaks"), action = "store", type = "character", help = "BED file of peaks (space separated)"),                    
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference GTF file (Gencode)"),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
-                    make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize [default: %default]", default = "libsize"),
-                    make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, spline, gaussian [default: %default]", default = "rollmean"),
-                    make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window [default: %default]", default = 100),
-                    make_option(c("", "--size_x"), action = "store", type = "integer", help = "Plot size in mm (x) [default: %default]", default = 300),
-                    make_option(c("", "--size_y"), action = "store", type = "integer", help = "Plot size in mm (y) [default: %default]", default = 300),
+                    make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize [default %default]", default = "libsize"),
+                    make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, spline, gaussian [default %default]", default = "rollmean"),
+                    make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window [default %default]", default = 100),
+                    make_option(c("-a", "--annotation"), action = "store", type = "character", help = "Annotation options: original, gene, transcript, none [default %default]", default = "original"),
+                    make_option(c("", "--size_x"), action = "store", type = "integer", help = "Plot size in mm (x) [default: %default]", default = 210),
+                    make_option(c("", "--size_y"), action = "store", type = "integer", help = "Plot size in mm (y) [default: %default]", default = 297),
                     make_option(c("-o", "--output"), action = "store", type = "character", help = "Output plot filename"))
+
 opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
 
@@ -73,7 +75,6 @@ suppressPackageStartupMessages(library(cowplot))
 suppressPackageStartupMessages(library(smoother))
 suppressPackageStartupMessages(library(zoo))
 suppressPackageStartupMessages(library(data.table))
-suppressPackageStartupMessages(library(ggbio))
 
 # opt <- list(xlinks = "../tdp43_studentExercise/tardbp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph ../tdp43_studentExercise/tardbp-ngfp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph", #from https://imaps.genialis.com/iclip
 #            # track_names = "tdp43_1 tdp43_2", # or can be NULL 
@@ -99,6 +100,19 @@ suppressPackageStartupMessages(library(ggbio))
 #             output = "plot.pdf")
 # 
 # opt <- list(region = "chr15:68206992:68210000:-", gtf = "gencode.v29.primary_assembly.annotation.gtf.gz")
+
+# opt <- list(xlinks = "tardbp-316del346-egfp-hek293-hd1-6-merged-20180829-ju.bedgraph.gz tardbp-316del346-egfp-hek293-hd2-5-merged-20180829-ju.bedgraph.gz tardbp-egfp-hek293-hd1-6-merged-20180829-ju.bedgraph.gz tardbp-egfp-hek293-hd2-5-merged-20180829-ju.bedgraph.gz",
+#             peaks = "tdp43_binding_sites_genome_browser3.bed",
+#             gtf = "~/Ule/charlotte/CLIPplotR/gencode.v29.primary_assembly.annotation.gtf.gz",
+#             # region = "chr11:65503537:65505019:+",
+#             region = "TARDBP",
+#             output = "test_annot5.pdf",
+#             normalisation = "libsize",
+#             smoothing = "rollmean",
+#             smoothing_window = 50,
+#             annotation = "gene")
+# 
+# setwd("~/Downloads/martina_grouped_iclip_libs")
 
 # ==========
 # Functions
@@ -321,40 +335,157 @@ if(!is.null(opt$peaks)) {
 
 message("Creating annotation track")
 
-# # First deal with purely intronic regions, because biovisbase doesn't handle this
-# if(is.null(exonsByOverlaps(TxDb, region.gr)$tx_id)){
-#   overlapping_tscripts = transcriptsByOverlaps(TxDb, region.gr)$tx_id
-#   overlapping_tscripts_name = transcriptsByOverlaps(TxDb, region.gr)$tx_name
-#   introns_in_trscripts = intronsByTranscript(TxDb)[overlapping_tscripts,]
+# ==========
+# Plot gene kind of structure
+# ==========
+
+if(opt$annotation == "gene") {
+
+  exons_g.grl <- exonsBy(TxDb, by = "gene")
   
-#   #Get overlapping introns
+  sel.genes <- subsetByOverlaps(genes.gr, region.gr)
+  sel.exons <- exons(TxDb, filter = list(gene_id = sel.genes$gene_id), columns = "gene_id")
   
-#   if (length(overlapping_tscripts)>1){
-#     annot.gr=list()
-#     for (i in 1:length(overlapping_tscripts)){
-#       intron_reg = region.gr[subjectHits(findOverlaps(region.gr, introns_in_trscripts[[i]])),]
-#       intron_reg$type="gap"
-#       intron_reg$tx_id=overlapping_tscripts[[i]]
-#       intron_reg$tx_name=overlapping_tscripts_name[[i]]}
-#     annot.gr = c(final_int_reg,intron_reg)
-#   } else {
-#     intron_reg = region.gr[subjectHits(findOverlaps(region.gr, introns_in_trscripts)),]
-#     intron_reg$type="gap"
-#     intron_reg$tx_id=overlapping_tscripts
-#     intron_reg$tx_name=overlapping_tscripts_name
-#     annot.gr = intron_reg
-#   }
-# } else {
+  # Region (for arrows)
+  region.gr$gene_id <- NULL
+  region.tiled <- rep(region.gr, length(sel.genes)) # Create one for each gene
+  region.tiled <- tile(region.tiled, width = 500)
+  
+  sel.region.tiled <- GRangesList(lapply(seq_along(sel.genes), function(i) {
+    gr <- subsetByOverlaps(region.tiled[[i]], sel.genes[i], type = "any")
+    # Need to adjust for ends
+    start(gr[1]) <- start(sel.genes[i])
+    end(gr[length(gr)]) <- end(sel.genes[i])
+    return(gr)
+  }))
+  
+  names(sel.region.tiled) <- sel.genes$gene_id
+  sel.region.tiled.dt <- as.data.table(sel.region.tiled)
+  setnames(sel.region.tiled.dt, "group_name", "gene_id")
+  
+  # Exons
+  sel.exons.dt <- as.data.table(sel.exons)
+  sel.exons.dt$gene_id <- as.character(sel.exons.dt$gene_id) # otherwise type is AsIs
+  sel.exons.dt <- merge(sel.exons.dt, unique(sel.region.tiled.dt[, .(group, gene_id)]), by = "gene_id")
+  
+  # Plot
+  p.annot <- ggplot() +
+    geom_segment(data = sel.region.tiled.dt, mapping = aes(x = start, xend = end - 10, y = group, yend = group), arrow = arrow(length = unit(0.1, "cm")), colour = "grey50") +
+    geom_rect(data = sel.exons.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.25, ymax = group + 0.25, fill = gene_id)) +
+    theme_cowplot() + theme(axis.line.y = element_blank(), axis.ticks.y = element_blank(), axis.text.y = element_blank(), legend.position = "bottom") +
+    scale_fill_tableau() +
+    labs(x = "Coordinate",
+         y = "",
+         fill = "") +
+    coord_cartesian(xlim = c(start(region.gr), end(region.gr)))
+
+}
+
+# ==========
+# Plot transcript kind of structure
+# ==========
+
+if(opt$annotation == "transcript") {
+  
+  # Get transcripts that overlap region and order for plotting
+  sel.tx_genes <- transcriptsByOverlaps(TxDb, region.gr, columns = c("gene_id", "tx_name"))
+  sel.tx_genes <- sel.tx_genes[order(width(sel.tx_genes), decreasing = TRUE)]
+  tx.order.dt <- data.table(transcript_id = sel.tx_genes$tx_name,
+                            gene_id = unlist(sel.tx_genes$gene_id),
+                            centre = start(sel.tx_genes) + width(sel.tx_genes)/2)[, group := 1:.N]
+  
+  # Region (for arrows)
+  region <- region.gr
+  region$gene_id <- NULL
+  region.tiled <- rep(region, length(sel.tx_genes))
+  region.tiled$tx_name <- sel.tx_genes$tx_name
+  region.tiled <- tile(region.tiled, width = round(width(region)/15, -1))
+
+  sel.region.tiled <- GRangesList(lapply(seq_along(sel.tx_genes), function(i) {
+    gr <- subsetByOverlaps(region.tiled[[i]], sel.tx_genes[i], type = "any")
+    start(gr[1]) <- start(sel.tx_genes[i])
+    end(gr[length(gr)]) <- end(sel.tx_genes[i])
+    return(gr)
+  }))
+  
+  names(sel.region.tiled) <- sel.tx_genes$tx_name
+  sel.region.tiled.dt <- as.data.table(sel.region.tiled)
+  sel.region.tiled.dt[, group := NULL]
+  setnames(sel.region.tiled.dt, "group_name", "transcript_id")
+  sel.region.tiled.dt <- merge(sel.region.tiled.dt, tx.order.dt, by = "transcript_id")
+  
+  # CDS
+  cds_tx <- cdsBy(TxDb, by = "tx", use.names = TRUE)
+  sel.cds_tx <- cds_tx[names(cds_tx) %in% sel.tx_genes$tx_name]
+  sel.cds_tx.dt <- as.data.table(sel.cds_tx)
+  sel.cds_tx.dt[, group := NULL]
+  setnames(sel.cds_tx.dt, "group_name", "transcript_id")
+  sel.cds_tx.dt <- merge(sel.cds_tx.dt, tx.order.dt, by = "transcript_id")
+  
+  # UTR5
+  utr5_tx <- fiveUTRsByTranscript(TxDb, use.names = TRUE)
+  sel.utr5_tx <- utr5_tx[names(utr5_tx) %in% sel.tx_genes$tx_name]
+  sel.utr5_tx.dt <- as.data.table(sel.utr5_tx)
+  sel.utr5_tx.dt[, group := NULL]
+  setnames(sel.utr5_tx.dt, "group_name", "transcript_id") 
+  sel.utr5_tx.dt <- merge(sel.utr5_tx.dt, tx.order.dt, by = "transcript_id")
+    
+  # UTR3
+  utr3_tx <- threeUTRsByTranscript(TxDb, use.names = TRUE)
+  sel.utr3_tx <- utr3_tx[names(utr3_tx) %in% sel.tx_genes$tx_name]
+  sel.utr3_tx.dt <- as.data.table(sel.utr3_tx)
+  sel.utr3_tx.dt[, group := NULL]
+  setnames(sel.utr3_tx.dt, "group_name", "transcript_id")
+  sel.utr3_tx.dt <- merge(sel.utr3_tx.dt, tx.order.dt, by = "transcript_id")
+  
+  # Exons
+  exons_tx <- exonsBy(TxDb, by = "tx", use.names = TRUE)
+  sel.exons_tx <- exons_tx[names(exons_tx) %in% sel.tx_genes$tx_name[!sel.tx_genes$tx_name %in% names(sel.cds_tx)]] # Don't want genes with CDS, just e.g. ncRNA
+  sel.exons_tx.dt <- as.data.table(sel.exons_tx)
+  sel.exons_tx.dt[, group := NULL]
+  setnames(sel.exons_tx.dt, "group_name", "transcript_id")
+  sel.exons_tx.dt <- merge(sel.exons_tx.dt, tx.order.dt, by = "transcript_id")
+  
+  # Plot
+  p.annot <- ggplot() +
+    geom_segment(data = sel.region.tiled.dt, mapping = aes(x = start, xend = end - 5, y = group, yend = group), arrow = arrow(length = unit(0.1, "cm")), colour = "grey50") +
+    # geom_rect(data = sel.exons_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.25, ymax = group + 0.25), fill = "black") +
+    # geom_rect(data = sel.cds_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.25, ymax = group + 0.25), fill = "black") +
+    # geom_rect(data = sel.utr5_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.15, ymax = group + 0.15), fill = "black") +
+    # geom_rect(data = sel.utr3_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.15, ymax = group + 0.15), fill = "black") +
+    # geom_text(data = tx.order.dt, aes(label = transcript_id, y = group, x = centre), size = 3, vjust = 0) +
+    geom_rect(data = sel.exons_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.25, ymax = group + 0.25, fill = gene_id)) +
+    geom_rect(data = sel.cds_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.25, ymax = group + 0.25, fill = gene_id)) +
+    geom_rect(data = sel.utr5_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.15, ymax = group + 0.15, fill = gene_id)) +
+    geom_rect(data = sel.utr3_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.15, ymax = group + 0.15, fill = gene_id)) +
+    scale_fill_tableau() +
+    theme_cowplot() + theme(axis.line.y = element_blank(), axis.ticks.y = element_blank(), axis.text.y = element_blank(), legend.position = "bottom") +
+    labs(x = "Coordinate",
+         y = "",
+         fill = "") +
+    coord_cartesian(xlim = c(start(region), end(region)))
+  
+}
+
+# ==========
+# Omit annotation plot
+# ==========
+
+if(opt$annotation == "none") {
+
+  p.annot <- ggplot() + theme_cowplot() + theme(axis.line = element_blank())
+
+}
+
+# ==========
+# Old style
+# ==========
+
+if(opt$annotation == "original") {
+
+suppressPackageStartupMessages(library(ggbio))
+
 annot.gr <- biovizBase::crunch(TxDb, which = region.gr)
-# }
-
-# if (is.na(annot.gr)){
-#   ggsave(p.iclip,height = 300, width = 300, units = "mm", filename = opt$output)
-#   message("Completed")
-#   quit(save="no")
-# }
-
-
 annot.gr$tx_name <- as.character(annot.gr$tx_name)
 annot.grl <- split(annot.gr, annot.gr$tx_name)
 
@@ -376,23 +507,6 @@ annot.grl <- GRangesList(lapply(annot.grl, function(x) {
   }
 }))
 
-# # For bug check
-# annot.grl <- GRangesList(lapply(1:length(annot.grl), function(i) {
-#   
-#   message(i)
-#   x <- annot.grl[[i]]
-#   exon <- x[x$type == "exon"]  
-#   utr <- x[x$type == "utr"]
-#   strand(utr) <- unique(strand(exon)) # Otherwise utr isn't stranded, but needed for setdiff later
-#   rest <- x[!x$type %in% c("utr", "exon")]
-#   
-#   exon <- GenomicRanges::setdiff(exon, utr, ignore.strand = FALSE)  
-#   mcols(exon)$type <- "exon"
-#   
-#   return(sort(c(rest, exon, utr)))
-#   
-# }))
-
 # Add gene name to labels
 gene_names <- gtf$gene_name[match(names(annot.grl), gtf$transcript_id)]
 names(annot.grl) <- paste0(gene_names, " - ", names(annot.grl))
@@ -406,10 +520,29 @@ p.annot <- ggplot(data = annot.grl) +
 # Select out ggplot object
 p.annot <- p.annot@ggplot
 
+}
+
 # ==========
 # Part 3 - combine plots
 # ==========
 
 # plot_grid(p.iclip, p.annot, align = "hv", axis = "tlbr", nrow = 2, rel_heights = c(1, 2))
-ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(1, 1, 2)), height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
+
+if(opt$annotation == "original") {
+  ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(1, 0.5, 2)), height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
+}
+
+if(opt$annotation == "gene") {
+  ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(2, 1, 1)), height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
+}
+
+if(opt$annotation == "transcript") {
+  ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(2, 1, 3)), height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
+}
+
+if(opt$annotation == "none") {
+  ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(2, 1, 1)), height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
+}
+
+
 message("Completed")
