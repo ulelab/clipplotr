@@ -21,7 +21,7 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize [default %default]", default = "libsize"),
                     make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, spline, gaussian [default %default]", default = "rollmean"),
                     make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window [default %default]", default = 100),
-                    make_option(c("-a", "--annotation"), action = "store", type = "character", help = "Annotation options: original, gene, transcript [default %default]", default = "original"),
+                    make_option(c("-a", "--annotation"), action = "store", type = "character", help = "Annotation options: original, gene, transcript, none [default %default]", default = "original"),
                     make_option(c("-z", "--size_x"), action = "store", type = "integer", help = "Plot size in mm (x)", default = 210),
                     make_option(c("-y", "--size_y"), action = "store", type = "integer", help = "Plot size in mm (y)", default = 297),
                     make_option(c("-o", "--output", action = "store", type = "character", help = "Output plot filename")))
@@ -434,6 +434,15 @@ if(opt$annotation == "transcript") {
   
 }
 
+# ==========
+# Omit annotation plot
+# ==========
+
+if(opt$annotation == "none") {
+
+  p.annot <- ggplot() + theme_cowplot() + theme(axis.line = element_blank())
+
+}
 
 # ==========
 # Old style
@@ -546,6 +555,10 @@ if(opt$annotation == "gene") {
 
 if(opt$annotation == "transcript") {
   ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(2, 1, 3)), height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
+}
+
+if(opt$annotation == "none") {
+  ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(2, 1, 1)), height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
 }
 
 
