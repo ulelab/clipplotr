@@ -335,6 +335,9 @@ if(!is.null(opt$peaks)) {
 
 message("Creating annotation track")
 
+rosetta.dt <- as.data.table(mcols(genes.gr))[, .(gene_id, gene_name)]
+setkey(rosetta.dt, gene_id)
+
 # ==========
 # Plot gene kind of structure
 # ==========
@@ -370,7 +373,7 @@ if(opt$annotation == "gene") {
   
   # Plot
   p.annot <- ggplot() +
-    geom_segment(data = sel.region.tiled.dt, mapping = aes(x = start, xend = end - 10, y = group, yend = group), arrow = arrow(length = unit(0.1, "cm")), colour = "grey50") +
+    geom_segment(data = sel.region.tiled.dt, mapping = aes(x = start, xend = end, y = group, yend = group), arrow = arrow(length = unit(0.1, "cm")), colour = "grey50") +
     geom_rect(data = sel.exons.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.25, ymax = group + 0.25, fill = gene_id)) +
     theme_cowplot() + theme(axis.line.y = element_blank(), axis.ticks.y = element_blank(), axis.text.y = element_blank(), legend.position = "bottom") +
     scale_fill_tableau() +
@@ -393,6 +396,9 @@ if(opt$annotation == "transcript") {
   tx.order.dt <- data.table(transcript_id = sel.tx_genes$tx_name,
                             gene_id = unlist(sel.tx_genes$gene_id),
                             centre = start(sel.tx_genes) + width(sel.tx_genes)/2)[, group := 1:.N]
+  setkey(tx.order.dt, gene_id)
+  tx.order.dt <- rosetta.dt[tx.order.dt]
+  tx.order.dt[, gene := paste0(gene_name, " | ", gene_id)]
   
   # Region (for arrows)
   region <- region.gr
@@ -448,22 +454,30 @@ if(opt$annotation == "transcript") {
   
   # Plot
   p.annot <- ggplot() +
-    geom_segment(data = sel.region.tiled.dt, mapping = aes(x = start, xend = end - 5, y = group, yend = group), arrow = arrow(length = unit(0.1, "cm")), colour = "grey50") +
+    geom_segment(data = sel.region.tiled.dt, mapping = aes(x = start, xend = end, y = group, yend = group), arrow = arrow(length = unit(0.1, "cm")), colour = "grey50") +
     # geom_rect(data = sel.exons_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.25, ymax = group + 0.25), fill = "black") +
     # geom_rect(data = sel.cds_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.25, ymax = group + 0.25), fill = "black") +
     # geom_rect(data = sel.utr5_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.15, ymax = group + 0.15), fill = "black") +
     # geom_rect(data = sel.utr3_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.15, ymax = group + 0.15), fill = "black") +
     # geom_text(data = tx.order.dt, aes(label = transcript_id, y = group, x = centre), size = 3, vjust = 0) +
-    geom_rect(data = sel.exons_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.25, ymax = group + 0.25, fill = gene_id)) +
-    geom_rect(data = sel.cds_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.25, ymax = group + 0.25, fill = gene_id)) +
-    geom_rect(data = sel.utr5_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.15, ymax = group + 0.15, fill = gene_id)) +
-    geom_rect(data = sel.utr3_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.15, ymax = group + 0.15, fill = gene_id)) +
+    geom_rect(data = sel.exons_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.25, ymax = group + 0.25, fill = gene)) +
+    geom_rect(data = sel.cds_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.25, ymax = group + 0.25, fill = gene)) +
+    geom_rect(data = sel.utr5_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.15, ymax = group + 0.15, fill = gene)) +
+    geom_rect(data = sel.utr3_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.15, ymax = group + 0.15, fill = gene)) +
     scale_fill_tableau() +
     theme_cowplot() + theme(axis.line.y = element_blank(), axis.ticks.y = element_blank(), axis.text.y = element_blank(), legend.position = "bottom") +
     labs(x = "Coordinate",
          y = "",
          fill = "") +
     coord_cartesian(xlim = c(start(region), end(region)))
+  
+  
+  if(opt$show_tx_name == TRUE) {
+    
+    p.annot <- p.annot + geom_text(data = tx.order.dt, aes(label = transcript_id, y = group + 0.3, x = centre), size = 3, vjust = 0)
+    # Need to fix ones that are outside of window
+    
+  }
   
 }
 
