@@ -200,7 +200,22 @@ seqlevels(region.gr) <- as.character(unique(seqnames(region.gr))) # Cut down to 
 # Read in xlinks
 message("Loading bedgraphs")
 xlink.files <- strsplit(opt$xlinks, " ")[[1]]
-xlinks <- lapply(xlink.files, ImportiMapsBedgraph)
+
+if(all(grepl("bedgraph$|bedgraph.gz$", xlink.files))) {
+
+  xlinks <- lapply(xlink.files, ImportiMapsBedgraph)
+
+} else if(all(grepl("bed$|bed.gz$", xlink.files))) {
+
+
+  xlinks <- lapply(xlink.files, import.bed)
+
+} else {
+
+  stop("Crosslink files need to be in iCount bedgraph or bed format.")
+
+}
+
 libSizes <- lapply(xlinks, function(x) { sum(abs(x$score)) })
 
 # Subset for region and add in 0 count position
