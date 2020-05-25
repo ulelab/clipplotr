@@ -262,7 +262,7 @@ xlinks.dt[, smoothed := switch(opt$smoothing,
 if(!is.null(opt$groups)) {
 
   groups.dt <- data.table(sample = track_names, grp = strsplit(opt$group, " ")[[1]])
-  xlinks.dt <- merge(xlinks.dt, groups.dt, by = sample)
+  xlinks.dt <- merge(xlinks.dt, groups.dt, by = "sample")
 
 }
 
