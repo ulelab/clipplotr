@@ -138,9 +138,9 @@ SubsetBedgraph <- function(gr, selected.region.gr) {
   xlinks.gr <- unlist(tile(selected.region.gr, width = 1))
   
   ol <- findOverlaps(xlinks.gr, gr)
-  xlinks.gr$score <- NA
+  xlinks.gr$score <- 0
   xlinks.gr[queryHits(ol)]$score <- gr[subjectHits(ol)]$score
-  xlinks.gr$score[is.na(xlinks.gr$score)] <- 0
+  # xlinks.gr$score[is.na(xlinks.gr$score)] <- 0
   
   return(xlinks.gr)
   
@@ -171,11 +171,7 @@ if(file.exists(gsub(".gtf.gz|.gtf", ".sqlite", opt$gtf))) {
 }
 
 # Define region
-if(is.null(opt$region)) {
-  
-  stop("Need to supply a region or a gene id or name")
-  
-} else if(grepl("^ENS", opt$region)) {
+if(grepl("^ENS", opt$region)) {
   
   region.gr <- genes.gr[grepl(opt$region, genes.gr$gene_id)]
   
@@ -221,14 +217,16 @@ libSizes <- lapply(xlinks, function(x) { sum(abs(x$score)) })
 # Subset for region and add in 0 count position
 xlinks <- lapply(xlinks, function(x) SubsetBedgraph(gr = x, selected.region.gr = region.gr))
 
-# Names of bedgraphs : If name is supplied use that, if not then generate a name from the file name
+# Names of bedgraphs: If name is supplied use that, if not then generate a name from the file name
 if (!is.null(opt$label)) {
   
-  track_names=strsplit(opt$label, " ")[[1]]
+  track_names <- strsplit(opt$label, " ")[[1]]
+
   
 } else {
   
-  track_names = lapply(strsplit(opt$xlinks, " ")[[1]], function(x) gsub(".bedgraph", "", basename(x)))
+  # track_names <- lapply(strsplit(opt$xlinks, " ")[[1]], function(x) gsub(".bedgraph", "", basename(x)))
+  track_names <- lapply(strsplit(opt$xlinks, " ")[[1]], function(x) substr(x, start = 1, end = 10))
   
 }
 

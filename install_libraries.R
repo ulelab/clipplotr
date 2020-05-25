@@ -12,8 +12,6 @@ for(package in packages) {
 
 }
 
-CheckAndInstall(package)
-
 biocpackages <- c("rtracklayer", "GenomicFeatures", "ggbio")
 for(package in biocpackages) {
   
