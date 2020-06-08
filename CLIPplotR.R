@@ -78,44 +78,6 @@ suppressPackageStartupMessages(library(smoother))
 suppressPackageStartupMessages(library(zoo))
 suppressPackageStartupMessages(library(data.table))
 
-# opt <- list(xlinks = "../tdp43_studentExercise/tardbp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph ../tdp43_studentExercise/tardbp-ngfp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph", #from https://imaps.genialis.com/iclip
-#            # track_names = "tdp43_1 tdp43_2", # or can be NULL 
-# 	gtf = "../hg38_regions/gencode.v30.primary_assembly.annotation.gtf", #"~/Ule/ref/gencode.v27.annotation.gtf.gz"
-# 	region = "chr3:35754106:35856276:+",
-# 	gene = "ENSMUSG00000037400", #ID or name "Atp11b"
-# 	smoothing = "gaussian", #gaussian or rollmean
-# 	smoothing_window = 10, #both types of smoothing require a window
-# 	normalisation = "libsize", #libsize or maxpeak or none
-# 	output = "plot.pdf")
-
-# setwd("~/Ule/charlotte/CLIPplotR")
-# 
-# opt <- list(xlinks = "tardbp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph tardbp-ngfp-esc-m-p2lox-gfp-tdp43-20151212_trimmed_single.bedgraph", #from https://imaps.genialis.com/iclip
-#             # track_names = "tdp43_1 tdp43_2", # or can be NULL
-#             gtf = "gencode.vM22.annotation.gtf.gz", #"~/Ule/ref/gencode.v27.annotation.gtf.gz"
-#             # region = "chr3:35754106:35856276:+",
-#             # gene = "ENSMUSG00000037400", #ID or name "Atp11b"
-#             region = "Ank3", #ID or name "Atp11b"
-#             smoothing = "rollmean", #gaussian or rollmean or none
-#             smoothing_window = 1000, #both types of smoothing require a window
-#             normalisation = "none", #libsize or maxpeak or none
-#             output = "plot.pdf")
-# 
-# opt <- list(region = "chr15:68206992:68210000:-", gtf = "gencode.v29.primary_assembly.annotation.gtf.gz")
-
-# opt <- list(xlinks = "tardbp-316del346-egfp-hek293-hd1-6-merged-20180829-ju.bedgraph.gz tardbp-316del346-egfp-hek293-hd2-5-merged-20180829-ju.bedgraph.gz tardbp-egfp-hek293-hd1-6-merged-20180829-ju.bedgraph.gz tardbp-egfp-hek293-hd2-5-merged-20180829-ju.bedgraph.gz",
-#             peaks = "tdp43_binding_sites_genome_browser3.bed",
-#             gtf = "~/Ule/charlotte/CLIPplotR/gencode.v29.primary_assembly.annotation.gtf.gz",
-#             # region = "chr11:65503537:65505019:+",
-#             region = "TARDBP",
-#             output = "test_annot5.pdf",
-#             normalisation = "libsize",
-#             smoothing = "rollmean",
-#             smoothing_window = 50,
-#             annotation = "gene")
-# 
-# setwd("~/Downloads/martina_grouped_iclip_libs")
-
 # ==========
 # Functions
 # ==========
@@ -340,10 +302,6 @@ if(!is.null(opt$peaks)) {
 
   }
 
-} else {
-
-  p.peaks <- ggplot() + theme_cowplot() + theme(axis.line = element_blank())
-
 }
 
 # ==========
@@ -370,12 +328,7 @@ if(!is.null(opt$coverage)) {
     theme_cowplot() + theme(legend.position = "none") +
     xlim(start(region.gr), end(region.gr))
 
-} else {
-  
-  p.coverage <- ggplot() + theme_cowplot() + theme(axis.line = element_blank())
-  
 }
-  
   
 # ==========
 # Part 2 - bottom half: gene structures
@@ -588,25 +541,27 @@ p.annot <- p.annot@ggplot
 # Part 3 - combine plots
 # ==========
 
-# plot_grid(p.iclip, p.annot, align = "hv", axis = "tlbr", nrow = 2, rel_heights = c(1, 2))
-
-if(opt$annotation == "original") {
-  ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(1, 0.5, 2)), height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
+p <- p.iclip
+ratios <- 2
+if(exists("p.peaks")) {
+  p <- p / p.peaks
+  ratios <- c(ratios, 1)
+}
+if(exists("p.coverage")) {
+  p <- p / p.coverage
+  ratios <- c(ratios, 2)
+}
+if(exists("p.annot")) {
+  p <- p / p.annot
+  ratios <- c(ratios, 3)
+  # Could change this to ifelse depending on annotation style
 }
 
-if(opt$annotation == "gene") {
-  ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(2, 1, 1)), height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
-}
+print(ratios)
 
 if(opt$annotation == "transcript") {
-  # ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(2, 2, 3)), height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
-  p <- p.iclip / p.peaks / p.coverage/ p.annot
-  p <- p + plot_layout(heights = c(2, 1, 2, 3))
+  p <- p + plot_layout(heights = ratios)
   ggsave(p, height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
-}
-
-if(opt$annotation == "none") {
-  ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(2, 1, 1)), height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
 }
 
 
