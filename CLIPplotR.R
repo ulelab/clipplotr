@@ -20,7 +20,7 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference GTF file (Gencode)"),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
                     make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize [default %default]", default = "libsize"),
-                    make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, spline, gaussian [default %default]", default = "rollmean"),
+                    make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, gaussian [default %default]", default = "rollmean"),
                     make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window [default %default]", default = 100),
                     make_option(c("-a", "--annotation"), action = "store", type = "character", help = "Annotation options: original, gene, transcript, none [default %default]", default = "transcript"),
                     make_option(c("", "--size_x"), action = "store", type = "integer", help = "Plot size in mm (x) [default: %default]", default = 210),
@@ -52,7 +52,7 @@ if(is.null(opt$gtf)) {
 
 if(is.null(opt$region)) {
 
-  message("ERROR: No region defined")
+  message("ERROR: region of interest needed to be supplied as e.g. chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11bd")
   quit(save = "no")
 
 }
@@ -62,6 +62,22 @@ if(is.null(opt$output)) {
   message("ERROR: No output defined")
   quit(save = "no")
 
+}
+
+# Check switches
+
+if(!opt$normalisation %in% c("none", "maxpeak", "libsize")) {
+  
+  message("ERROR: normalisation needs to be one of none, maxpeak, or libsize")
+  quit(save = "no")
+  
+}
+
+if(!opt$smoothing %in% c("none", "rollmean", "gaussian")) {
+  
+  message("ERROR: normalisation needs to be one of none, rollmean, or gaussian")
+  quit(save = "no")
+  
 }
 
 # ==========
@@ -264,7 +280,7 @@ p.iclip <- ggplot(xlinks.dt, aes(x = start, y = smoothed, group = sample, color 
 # Facet if groups
 if(!is.null(opt$groups)) {
 
-  p.iclip <- p.iclip + facet_grid(grp ~ ., scales = "free_y")
+  p.iclip <- p.iclip + facet_grid(grp ~ .) + theme(strip.text.y = element_text(size = 8))
 
 }
 
@@ -341,7 +357,7 @@ if(!is.null(opt$coverage)) {
          colour = "") +
     scale_colour_tableau(palette = "Seattle Grays") +
     facet_grid(exp ~ .) +
-    theme_cowplot() + theme(legend.position = "none") +
+    theme_cowplot() + theme(legend.position = "none") + theme(strip.text.y = element_text(size = 8)) +
     xlim(start(region.gr), end(region.gr))
 
 }
@@ -561,7 +577,7 @@ p <- p.iclip
 ratios <- 2
 if(exists("p.peaks")) {
   p <- p / p.peaks
-  ratios <- c(ratios, 1)
+  ratios <- c(ratios, 0.5)
 }
 if(exists("p.coverage")) {
   p <- p / p.coverage
