@@ -7,8 +7,12 @@ IP1	https://www.encodeproject.org/files/ENCFF239CML/@@download/ENCFF239CML.bam
 IP2	https://www.encodeproject.org/files/ENCFF170YQV/@@download/ENCFF170YQV.bam
 SMI https://www.encodeproject.org/files/ENCFF515BTB/@@download/ENCFF515BTB.bam
 
+PEAKS: https://www.encodeproject.org/files/ENCFF871NYM/@@download/ENCFF871NYM.bed.gz
+
 K562
 
 IP1	https://www.encodeproject.org/files/ENCFF537RYR/@@download/ENCFF537RYR.bam
 IP2	https://www.encodeproject.org/files/ENCFF296GDR/@@download/ENCFF296GDR.bam
 SMI	https://www.encodeproject.org/files/ENCFF212IIR/@@download/ENCFF212IIR.bam
+
+PEAKS: https://www.encodeproject.org/files/ENCFF206RIM/@@download/ENCFF206RIM.bed.gz
