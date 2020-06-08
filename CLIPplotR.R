@@ -3,7 +3,7 @@
 # Script to plot multiple CLIP tracks with gene structures
 # A. M. Chakrabarti
 # C. Capitanchik
-# Last updated: 17th April 2020
+# Last updated: 8th June 2020
 
 # ==========
 # Preamble
@@ -22,7 +22,7 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize [default %default]", default = "libsize"),
                     make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, spline, gaussian [default %default]", default = "rollmean"),
                     make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window [default %default]", default = 100),
-                    make_option(c("-a", "--annotation"), action = "store", type = "character", help = "Annotation options: original, gene, transcript, none [default %default]", default = "original"),
+                    make_option(c("-a", "--annotation"), action = "store", type = "character", help = "Annotation options: original, gene, transcript, none [default %default]", default = "transcript"),
                     make_option(c("", "--size_x"), action = "store", type = "integer", help = "Plot size in mm (x) [default: %default]", default = 210),
                     make_option(c("", "--size_y"), action = "store", type = "integer", help = "Plot size in mm (y) [default: %default]", default = 297),
                     make_option(c("-o", "--output"), action = "store", type = "character", help = "Output plot filename"))
@@ -573,12 +573,7 @@ if(exists("p.annot")) {
   # Could change this to ifelse depending on annotation style
 }
 
-print(ratios)
-
-if(opt$annotation == "transcript") {
-  p <- p + plot_layout(heights = ratios)
-  ggsave(p, height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
-}
-
+p <- p + plot_layout(heights = ratios)
+ggsave(p, height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
 
 message("Completed")
