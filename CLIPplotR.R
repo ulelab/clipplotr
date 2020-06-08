@@ -12,9 +12,9 @@
 suppressPackageStartupMessages(library(optparse))
 
 option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "character", help = "Input iCLIP bedgraphs (space separated)"),
-                    make_option(c("-l", "--label"), action = "store", type = "character", help = "iCLIP bedgraph labels (space separated)"),
+                    make_option(c("-l", "--label"), action = "store", type = "character", help = "Unique iCLIP bedgraph labels (space separated)"),
                     make_option(c("-c", "--colours"), action = "store", type = "character", help = "iCLIP bedgraph colours (space separated)"),
-                    make_option(c("", "--groups"), action = "store", type = "character", help = "Grouping of iCLIP bedgraphs for separate plots (space separated"),
+                    make_option(c("", "--groups"), action = "store", type = "character", help = "Grouping of iCLIP bedgraphs for separate plots (space separated)"),
                     make_option(c("-p", "--peaks"), action = "store", type = "character", help = "BED file of peaks (space separated)"),                    
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference GTF file (Gencode)"),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
@@ -165,7 +165,7 @@ if(file.exists(gsub(".gtf.gz|.gtf", ".sqlite", opt$gtf))) {
 } else {
 
   message("Creating annotation database for future runs")
-  TxDb <- makeTxDbFromGFF(opt$gtf)
+  TxDb <- suppressMessages(makeTxDbFromGFF(opt$gtf))
   saveDb(TxDb, gsub(".gtf.gz|.gtf", ".sqlite", opt$gtf))
 
 }
@@ -226,7 +226,7 @@ if (!is.null(opt$label)) {
 } else {
   
   # track_names <- lapply(strsplit(opt$xlinks, " ")[[1]], function(x) gsub(".bedgraph", "", basename(x)))
-  track_names <- lapply(strsplit(opt$xlinks, " ")[[1]], function(x) substr(x, start = 1, end = 10))
+  track_names <- lapply(strsplit(opt$xlinks, " ")[[1]], function(x) substr(x, start = 1, stop = 10))
   
 }
 
@@ -299,7 +299,7 @@ p.iclip <- ggplot(xlinks.dt, aes(x = start, y = smoothed, group = sample, color 
 # Facet if groups
 if(!is.null(opt$groups)) {
 
-  p.iclip <- p.iclip + facet_grid(grp ~ .)
+  p.iclip <- p.iclip + facet_grid(grp ~ ., scales = "free_y")
 
 }
 
@@ -484,13 +484,13 @@ if(opt$annotation == "transcript") {
          fill = "") +
     coord_cartesian(xlim = c(start(region), end(region)))
   
-  
-  if(opt$show_tx_name == TRUE) {
-    
-    p.annot <- p.annot + geom_text(data = tx.order.dt, aes(label = transcript_id, y = group + 0.3, x = centre), size = 3, vjust = 0)
-    # Need to fix ones that are outside of window
-    
-  }
+  # 
+  # if(opt$show_tx_name == TRUE) {
+  #   
+  #   p.annot <- p.annot + geom_text(data = tx.order.dt, aes(label = transcript_id, y = group + 0.3, x = centre), size = 3, vjust = 0)
+  #   # Need to fix ones that are outside of window
+  #   
+  # }
   
 }
 
