@@ -1,14 +1,17 @@
 
 
 SAMPLES = ['ERR127302', 'ERR127303', 'ERR127304', 'ERR127305', 'ERR127306', 'ERR127307', 'ERR127308', 'ERR127309']
-STAR_INDEX = '/camp/lab/luscomben/home/users/chakraa2/projects/clipplotr/ref/STAR_GRCh37_Gencode34'
-CHR_LENGTHS = '//camp/lab/luscomben/home/users/chakraa2/projects/clipplotr/ref/STAR_GRCh37_Gencode34/chrNameLength.txt'
+STAR_INDEX = '/camp/lab/luscomben/home/users/chakraa2/projects/clipplotr/ref/STAR_GRCh37_Gencode34lift37'
+CHR_LENGTHS = '//camp/lab/luscomben/home/users/chakraa2/projects/clipplotr/ref/STAR_GRCh37_Gencode34lift37/chrNameLength.txt'
 
 rule all:
     input:
         expand('fastqc/{sample}_1_fastqc.html', sample=SAMPLES),
         expand('mapped/{sample}.Aligned.sortedByCoord.out.bam', sample=SAMPLES),
-        expand('coverage/{sample}_plus.bigwig', sample=SAMPLES)
+        # expand('coverage/{sample}_plus.bigwig', sample=SAMPLES),
+        'coverage/CTRL_plus.bigwig',
+        'coverage/KD1_plus.bigwig',
+        'coverage/KD2_plus.bigwig'
 
 rule fastqc:
     input:
@@ -75,25 +78,108 @@ rule star:
         samtools index -@ 8 {output.bam}
         """
 
-rule create_bigwig:
+rule create_bigwig_CTRL:
     input:
-        bam="mapped/{sample}.Aligned.sortedByCoord.out.bam"
+        bam=expand("mapped/{exp}.Aligned.sortedByCoord.out.bam", exp = ['ERR127306', 'ERR127307', 'ERR127308', 'ERR127309'])
     output:
-        bigwig_pos="coverage/{sample}_plus.bigwig",
-        bigwig_neg="coverage/{sample}_minus.bigwig",
-        bg_pos=temp("coverage/{sample}.Signal.Unique.str1.out.bg"),
-        bg_neg=temp("coverage/{sample}.Signal.Unique.str2.out.bg"),
-        bg_multi_pos=temp("coverage/{sample}.Signal.UniqueMultiple.str1.out.bg"),
-        bg_multi_neg=temp("coverage/{sample}.Signal.UniqueMultiple.str2.out.bg")
+        mergedbam=temp("coverage/CTRL.bam"),
+        bigwig_pos="coverage/CTRL_plus.bigwig",
+        bigwig_neg="coverage/CTRL_minus.bigwig",
+        bg_pos=temp("coverage/CTRL.Signal.Unique.str1.out.bg"),
+        bg_neg=temp("coverage/CTRL.Signal.Unique.str2.out.bg"),
+        bg_multi_pos=temp("coverage/CTRL.Signal.UniqueMultiple.str1.out.bg"),
+        bg_multi_neg=temp("coverage/CTRL.Signal.UniqueMultiple.str2.out.bg")
+    threads:
+        8
     params:
-        outprefix="coverage/{sample}.",
+        outprefix="coverage/CTRL.",
         chr_lengths=CHR_LENGTHS,
-        cluster="-J create_bigwig -N 1 -c 1 --mem=16G -t 12:00:00 -o logs/create_bigwig.{sample}.%A.log"
+        cluster="-J create_bigwig -N 1 -c 8 --mem=16G -t 12:00:00 -o logs/create_bigwig.CTRL.%A.log"
     shell:
         """
+        sambamba merge -t 8 {output.mergedbam} {input.bam}
+
         STAR --runMode inputAlignmentsFromBAM --inputBAMfile {input.bam} --outWigType bedGraph --outWigStrand Stranded --outWigNorm RPM --outFileNamePrefix {params.outprefix}
         bedSort {output.bg_pos} {output.bg_pos}
         bedSort {output.bg_neg} {output.bg_neg}
         bedGraphToBigWig {output.bg_pos} {params.chr_lengths} {output.bigwig_pos}
         bedGraphToBigWig {output.bg_neg} {params.chr_lengths} {output.bigwig_neg}
         """
+
+rule create_bigwig_KD1:
+    input:
+        bam=expand("mapped/{exp}.Aligned.sortedByCoord.out.bam", exp = ['ERR127302', 'ERR127303'])
+    output:
+        mergedbam=temp("coverage/KD1.bam"),
+        bigwig_pos="coverage/KD1_plus.bigwig",
+        bigwig_neg="coverage/KD1_minus.bigwig",
+        bg_pos=temp("coverage/KD1.Signal.Unique.str1.out.bg"),
+        bg_neg=temp("coverage/KD1.Signal.Unique.str2.out.bg"),
+        bg_multi_pos=temp("coverage/KD1.Signal.UniqueMultiple.str1.out.bg"),
+        bg_multi_neg=temp("coverage/KD1.Signal.UniqueMultiple.str2.out.bg")
+    threads:
+        8
+    params:
+        outprefix="coverage/KD1.",
+        chr_lengths=CHR_LENGTHS,
+        cluster="-J create_bigwig -N 1 -c 8 --mem=16G -t 12:00:00 -o logs/create_bigwig.KD1.%A.log"
+    shell:
+        """
+        sambamba merge -t 8 {output.mergedbam} {input.bam}
+
+        STAR --runMode inputAlignmentsFromBAM --inputBAMfile {input.bam} --outWigType bedGraph --outWigStrand Stranded --outWigNorm RPM --outFileNamePrefix {params.outprefix}
+        bedSort {output.bg_pos} {output.bg_pos}
+        bedSort {output.bg_neg} {output.bg_neg}
+        bedGraphToBigWig {output.bg_pos} {params.chr_lengths} {output.bigwig_pos}
+        bedGraphToBigWig {output.bg_neg} {params.chr_lengths} {output.bigwig_neg}
+        """
+rule create_bigwig_KD2:
+    input:
+        bam=expand("mapped/{exp}.Aligned.sortedByCoord.out.bam", exp = ['ERR127304', 'ERR127305'])
+    output:
+        mergedbam=temp("coverage/KD2.bam"),
+        bigwig_pos="coverage/KD2_plus.bigwig",
+        bigwig_neg="coverage/KD2_minus.bigwig",
+        bg_pos=temp("coverage/KD2.Signal.Unique.str1.out.bg"),
+        bg_neg=temp("coverage/KD2.Signal.Unique.str2.out.bg"),
+        bg_multi_pos=temp("coverage/KD2.Signal.UniqueMultiple.str1.out.bg"),
+        bg_multi_neg=temp("coverage/KD2.Signal.UniqueMultiple.str2.out.bg")
+    threads:
+        8
+    params:
+        outprefix="coverage/KD2.",
+        chr_lengths=CHR_LENGTHS,
+        cluster="-J create_bigwig -N 1 -c 8 --mem=16G -t 12:00:00 -o logs/create_bigwig.KD2.%A.log"
+    shell:
+        """
+        sambamba merge -t 8 {output.mergedbam} {input.bam}
+
+        STAR --runMode inputAlignmentsFromBAM --inputBAMfile {input.bam} --outWigType bedGraph --outWigStrand Stranded --outWigNorm RPM --outFileNamePrefix {params.outprefix}
+        bedSort {output.bg_pos} {output.bg_pos}
+        bedSort {output.bg_neg} {output.bg_neg}
+        bedGraphToBigWig {output.bg_pos} {params.chr_lengths} {output.bigwig_pos}
+        bedGraphToBigWig {output.bg_neg} {params.chr_lengths} {output.bigwig_neg}
+        """
+
+# rule create_bigwig:
+#     input:
+#         bam="mapped/{sample}.Aligned.sortedByCoord.out.bam"
+#     output:
+#         bigwig_pos="coverage/{sample}_plus.bigwig",
+#         bigwig_neg="coverage/{sample}_minus.bigwig",
+#         bg_pos=temp("coverage/{sample}.Signal.Unique.str1.out.bg"),
+#         bg_neg=temp("coverage/{sample}.Signal.Unique.str2.out.bg"),
+#         bg_multi_pos=temp("coverage/{sample}.Signal.UniqueMultiple.str1.out.bg"),
+#         bg_multi_neg=temp("coverage/{sample}.Signal.UniqueMultiple.str2.out.bg")
+#     params:
+#         outprefix="coverage/{sample}.",
+#         chr_lengths=CHR_LENGTHS,
+#         cluster="-J create_bigwig -N 1 -c 1 --mem=16G -t 12:00:00 -o logs/create_bigwig.{sample}.%A.log"
+#     shell:
+#         """
+#         STAR --runMode inputAlignmentsFromBAM --inputBAMfile {input.bam} --outWigType bedGraph --outWigStrand Stranded --outWigNorm RPM --outFileNamePrefix {params.outprefix}
+#         bedSort {output.bg_pos} {output.bg_pos}
+#         bedSort {output.bg_neg} {output.bg_neg}
+#         bedGraphToBigWig {output.bg_pos} {params.chr_lengths} {output.bigwig_pos}
+#         bedGraphToBigWig {output.bg_neg} {params.chr_lengths} {output.bigwig_neg}
+#         """
