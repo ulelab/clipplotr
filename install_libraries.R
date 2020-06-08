@@ -1,7 +1,7 @@
 # Script to install necessary libraries for CLIPplotR
 # A. M. Chakrabarti
 
-packages <- c("optparse", "BiocManager", "ggplot2", "ggthemes", "cowplot", "smoother", "zoo", "dplyr")
+packages <- c("optparse", "BiocManager", "ggplot2", "ggthemes", "cowplot", "smoother", "zoo", "dplyr", "patchwork")
 for(package in packages) {
 
     if(!suppressPackageStartupMessages(require(package, character.only = TRUE, quietly = TRUE))) {
