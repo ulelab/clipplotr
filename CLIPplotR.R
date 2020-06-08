@@ -12,10 +12,11 @@
 suppressPackageStartupMessages(library(optparse))
 
 option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "character", help = "Input iCLIP bedgraphs (space separated)"),
-                    make_option(c("-l", "--label"), action = "store", type = "character", help = "Unique iCLIP bedgraph labels (space separated)"),
+                    make_option(c("-l", "--labels"), action = "store", type = "character", help = "Unique iCLIP bedgraph labels (space separated)"),
                     make_option(c("-c", "--colours"), action = "store", type = "character", help = "iCLIP bedgraph colours (space separated)"),
                     make_option(c("", "--groups"), action = "store", type = "character", help = "Grouping of iCLIP bedgraphs for separate plots (space separated)"),
-                    make_option(c("-p", "--peaks"), action = "store", type = "character", help = "BED file of peaks (space separated)"),                    
+                    make_option(c("-p", "--peaks"), action = "store", type = "character", help = "BED file of peaks (space separated)"),
+                    make_option(c("", "--coverage"), action = "store", type = "character", help = "bigwig coverage files (e.g. RNA-seq or Quantseq) - ensure same strand as region of interest (space separated)"),
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference GTF file (Gencode)"),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
                     make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize [default %default]", default = "libsize"),
@@ -72,6 +73,7 @@ suppressPackageStartupMessages(library(GenomicFeatures))
 suppressPackageStartupMessages(library(ggplot2))
 suppressPackageStartupMessages(library(ggthemes))
 suppressPackageStartupMessages(library(cowplot))
+suppressPackageStartupMessages(library(patchwork))
 suppressPackageStartupMessages(library(smoother))
 suppressPackageStartupMessages(library(zoo))
 suppressPackageStartupMessages(library(data.table))
@@ -213,6 +215,7 @@ if(all(grepl("bedgraph$|bedgraph.gz$", xlink.files))) {
 }
 
 libSizes <- lapply(xlinks, function(x) { sum(abs(x$score)) })
+# libSizes <- lapply(xlink.files, function(x) sum(abs(fread(x, select = 5)$V5))) # Not sure yet if this is faster?
 
 # Subset for region and add in 0 count position
 xlinks <- lapply(xlinks, function(x) SubsetBedgraph(gr = x, selected.region.gr = region.gr))
@@ -311,12 +314,13 @@ if(!is.null(opt$groups)) {
 
 if(!is.null(opt$peaks)) {
 
+  message("Plotting peaks")
   peaks.files <- strsplit(opt$peaks, " ")[[1]]
   peaks.grl <- lapply(peaks.files, import.bed)
   peaks.grl <- lapply(peaks.grl, function(x) subsetByOverlaps(x, region.gr, ignore.strand = FALSE))
 
   peaks.dt <- rbindlist(lapply(peaks.grl, as.data.table))
-  peaks.dt$exp <- rep(gsub(".bed", "", basename(peaks.files)), elementNROWS(peaks.grl))
+  peaks.dt$exp <- rep(gsub(".bed|.bed.gz", "", basename(peaks.files)), elementNROWS(peaks.grl))
   peaks.dt$centre <- with(peaks.dt, start + width/2) # Replace this with data.table syntax, but need to check groups first
 
   if(nrow(peaks.dt) == 0) {
@@ -327,8 +331,8 @@ if(!is.null(opt$peaks)) {
 
   p.peaks <- ggplot(peaks.dt, aes(x = centre, width = width, y = exp)) +
     geom_tile() +
-    scale_y_discrete(breaks = gsub(".bed", "", basename(peaks.files)),
-                     limits = gsub(".bed", "", basename(peaks.files))) +
+    scale_y_discrete(breaks = gsub(".bed|.bed.gz", "", basename(peaks.files)),
+                     limits = rev(sort(gsub(".bed|.bed.gz", "", basename(peaks.files))))) +
     xlim(start(region.gr), end(region.gr)) +
     labs(y = "",
          x = "") +
@@ -342,6 +346,37 @@ if(!is.null(opt$peaks)) {
 
 }
 
+# ==========
+# Part 1c - top half: RNA-seq/coverage tracks
+# ==========
+
+if(!is.null(opt$coverage)) {
+  
+  message("Plotting coverage")
+  coverage.files <- strsplit(opt$coverage, " ")[[1]]
+  coverage.grl <- lapply(coverage.files, import.bw, selection = region.gr) # addition selection speeds up loading
+  coverage.grl <- lapply(coverage.grl, function(x) SubsetBedgraph(gr = x, selected.region.gr = region.gr))
+  # coverage.grl <- lapply(peaks.grl, function(x) subsetByOverlaps(x, region.gr, ignore.strand = FALSE))
+  coverage.dt <- rbindlist(lapply(coverage.grl, as.data.table))
+  coverage.dt$exp <- rep(gsub(".bw|.bigwig|.bigWig", "", coverage.files), elementNROWS(coverage.grl))
+  
+  p.coverage <- ggplot(coverage.dt, aes(x = start, y = score, col = exp)) +
+    geom_line() +
+    labs(x = "",
+         y = "Coverage",
+         colour = "") +
+    scale_colour_tableau(palette = "Seattle Grays") +
+    facet_grid(exp ~ .) +
+    theme_cowplot() + theme(legend.position = "none") +
+    xlim(start(region.gr), end(region.gr))
+
+} else {
+  
+  p.coverage <- ggplot() + theme_cowplot() + theme(axis.line = element_blank())
+  
+}
+  
+  
 # ==========
 # Part 2 - bottom half: gene structures
 # ==========
@@ -564,7 +599,10 @@ if(opt$annotation == "gene") {
 }
 
 if(opt$annotation == "transcript") {
-  ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(2, 1, 3)), height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
+  # ggsave(plot_grid(p.iclip, p.peaks, p.annot, align = "hv", axis = "tlbr", nrow = 3, rel_heights = c(2, 2, 3)), height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
+  p <- p.iclip / p.peaks / p.coverage/ p.annot
+  p <- p + plot_layout(heights = c(2, 1, 2, 3))
+  ggsave(p, height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
 }
 
 if(opt$annotation == "none") {
