@@ -282,23 +282,39 @@ if(!is.null(opt$peaks)) {
   peaks.grl <- lapply(peaks.grl, function(x) subsetByOverlaps(x, region.gr, ignore.strand = FALSE))
 
   peaks.dt <- rbindlist(lapply(peaks.grl, as.data.table))
-  peaks.dt$exp <- rep(gsub(".bed|.bed.gz", "", basename(peaks.files)), elementNROWS(peaks.grl))
+  peaks.labels <- substr(gsub(".bed|.bed.gz", "", basename(peaks.files)), start = 1, stop = 10)
+  peaks.dt$exp <- rep(peaks.labels, elementNROWS(peaks.grl))
   peaks.dt$centre <- with(peaks.dt, start + width/2) # Replace this with data.table syntax, but need to check groups first
 
-  if(nrow(peaks.dt) == 0) {
+  if(nrow(peaks.dt) != 0) {
 
-    p.peaks <- ggplot() + theme_cowplot() + theme(axis.line = element_blank())
+    if("itemRgb" %in% colnames(peaks.dt)) {
 
-  } else {
-
-  p.peaks <- ggplot(peaks.dt, aes(x = centre, width = width, y = exp)) +
-    geom_tile() +
-    scale_y_discrete(breaks = gsub(".bed|.bed.gz", "", basename(peaks.files)),
-                     limits = rev(sort(gsub(".bed|.bed.gz", "", basename(peaks.files))))) +
-    xlim(start(region.gr), end(region.gr)) +
-    labs(y = "",
-         x = "") +
-    theme_cowplot()
+      peak.cols <- unique(peaks.dt$itemRgb)
+      names(peak.cols) <- peak.cols
+          
+      p.peaks <- ggplot(peaks.dt, aes(x = centre, width = width, y = exp, fill = itemRgb)) +
+        geom_tile() +
+        scale_y_discrete(breaks = peaks.labels,
+                         limits = rev(sort(peaks.labels))) +
+        xlim(start(region.gr), end(region.gr)) +
+        scale_fill_manual(values = peak.cols) +
+        labs(y = "",
+             x = "") +
+        theme_cowplot() + theme(legend.position = "none")
+      
+    } else {
+      
+      p.peaks <- ggplot(peaks.dt, aes(x = centre, width = width, y = exp)) +
+        geom_tile() +
+        scale_y_discrete(breaks = peaks.labels,
+                         limits = rev(sort(peaks.labels))) +
+        xlim(start(region.gr), end(region.gr)) +
+        labs(y = "",
+             x = "") +
+        theme_cowplot()
+      
+    }
 
   }
 
