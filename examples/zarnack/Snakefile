@@ -1,0 +1,99 @@
+
+
+SAMPLES = ['ERR127302', 'ERR127303', 'ERR127304', 'ERR127305', 'ERR127306', 'ERR127307', 'ERR127308', 'ERR127309']
+STAR_INDEX = '/camp/lab/luscomben/home/users/chakraa2/projects/clipplotr/ref/STAR_GRCh37_Gencode34'
+CHR_LENGTHS = '//camp/lab/luscomben/home/users/chakraa2/projects/clipplotr/ref/STAR_GRCh37_Gencode34/chrNameLength.txt'
+
+rule all:
+    input:
+        expand('fastqc/{sample}_1_fastqc.html', sample=SAMPLES),
+        expand('mapped/{sample}.Aligned.sortedByCoord.out.bam', sample=SAMPLES),
+        expand('coverage/{sample}_plus.bigwig', sample=SAMPLES)
+
+rule fastqc:
+    input:
+        r1='fastq/{sample}_1.fastq.gz',
+        r2='fastq/{sample}_2.fastq.gz'
+    output:
+        r1html='fastqc/{sample}_1_fastqc.html',
+        r2html='fastqc/{sample}_2_fastqc.html',
+        r1zip=temp('fastqc/{sample}_1_fastqc.zip'),
+        r2zip=temp('fastqc/{sample}_2_fastqc.zip')
+    params:
+        cluster="-J fastqc -N 1 -c 2 --mem=16GB -t 24:00:00 -o logs/fastqc.{sample}.%A.log"
+    threads:
+        2
+    shell:
+        """
+        fastqc -t {threads} -o fastqc {input.r1} {input.r2}
+        """
+
+rule trimgalore:
+    input:
+        r1='fastq/{sample}_1.fastq.gz',
+        r2='fastq/{sample}_2.fastq.gz'
+    output:
+        r1='trimmed/{sample}_1_val_1.fq.gz',
+        r2='trimmed/{sample}_2_val_2.fq.gz'
+    params:
+        cluster="-J trimgalore -N 1 -c 4 --mem=32GB -t 24:00:00 -o logs/trimgalore.{sample}.%A.log"
+    threads:
+        4
+    shell:
+        """
+        trim_galore -j 4 -q 10 --gzip --length 16 --no_report_file -o trimmed --paired {input.r1} {input.r2}
+        """
+
+rule star:
+    input:
+        r1='trimmed/{sample}_1_val_1.fq.gz',
+        r2='trimmed/{sample}_2_val_2.fq.gz'
+    output:
+        bam="mapped/{sample}.Aligned.sortedByCoord.out.bam",
+        bai="mapped/{sample}.Aligned.sortedByCoord.out.bam.bai",
+        templog=temp("mapped/{sample}.Log.progress.out"),
+        sj=temp("mapped/{sample}.SJ.out.tab"),
+        genomedir=temp(directory("mapped/{sample}._STARgenome")),
+        passdir=temp(directory("mapped/{sample}._STARpass1")),
+    params:
+        star_index=STAR_INDEX,
+        outprefix="mapped/{sample}.",
+        alignment="--readFilesCommand zcat --genomeLoad NoSharedMemory --twopassMode Basic --alignSJoverhangMin 8 --alignSJDBoverhangMin 1 --sjdbScore 1 --limitBAMsortRAM 60000000000",
+        rna="--alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000",
+        output="--outFilterMultimapNmax 1 --outFilterMismatchNmax 999 --outFilterType BySJout --outSAMattributes All --outSAMtype BAM SortedByCoordinate",
+        cluster="-J star -N 1 -c 8 --mem=40GB -t 24:00:00 -o logs/star.{sample}.%A.log"
+    threads:
+        8
+    shell:
+        """
+        STAR --runThreadN {threads} \
+        --genomeDir {params.star_index} \
+        --readFilesIn {input.r1} {input.r2} \
+        --outFileNamePrefix {params.outprefix} \
+        {params.alignment} {params.rna} {params.output}
+
+        samtools index -@ 8 {output.bam}
+        """
+
+rule create_bigwig:
+    input:
+        bam="mapped/{sample}.Aligned.sortedByCoord.out.bam"
+    output:
+        bigwig_pos="coverage/{sample}_plus.bigwig",
+        bigwig_neg="coverage/{sample}_minus.bigwig",
+        bg_pos=temp("coverage/{sample}.Signal.Unique.str1.out.bg"),
+        bg_neg=temp("coverage/{sample}.Signal.Unique.str2.out.bg"),
+        bg_multi_pos=temp("coverage/{sample}.Signal.UniqueMultiple.str1.out.bg"),
+        bg_multi_neg=temp("coverage/{sample}.Signal.UniqueMultiple.str2.out.bg")
+    params:
+        outprefix="coverage/{sample}.",
+        chr_lengths=CHR_LENGTHS,
+        cluster="-J create_bigwig -N 1 -c 1 --mem=16G -t 12:00:00 -o logs/create_bigwig.{sample}.%A.log"
+    shell:
+        """
+        STAR --runMode inputAlignmentsFromBAM --inputBAMfile {input.bam} --outWigType bedGraph --outWigStrand Stranded --outWigNorm RPM --outFileNamePrefix {params.outprefix}
+        bedSort {output.bg_pos} {output.bg_pos}
+        bedSort {output.bg_neg} {output.bg_neg}
+        bedGraphToBigWig {output.bg_pos} {params.chr_lengths} {output.bigwig_pos}
+        bedGraphToBigWig {output.bg_neg} {params.chr_lengths} {output.bigwig_neg}
+        """
