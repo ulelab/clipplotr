@@ -244,6 +244,7 @@ xlinks.dt[, smoothed := switch(opt$smoothing,
 if(!is.null(opt$groups)) {
 
   groups.dt <- data.table(sample = track_names, grp = strsplit(opt$group, " ")[[1]])
+  groups.dt$grp <- factor(groups.dt$grp, levels = unique(strsplit(opt$group, " ")[[1]]))
   xlinks.dt <- merge(xlinks.dt, groups.dt, by = "sample")
 
 }
@@ -258,7 +259,7 @@ p.iclip <- ggplot(xlinks.dt) +
        y = "Crosslink signal",
        colour = "") +
   scale_colour_tableau(palette = "Tableau 10") +
-  theme_minimal_grid() + theme(legend.position = "top") +
+  theme_minimal_grid(line_size = 0.1) + theme(legend.position = "top") +
       xlim(start(region.gr),end(region.gr))
 
   } else {
@@ -333,7 +334,7 @@ if(!is.null(opt$peaks)) {
         scale_fill_manual(values = peak.cols) +
         labs(y = "",
              x = "") +
-        theme_cowplot() + theme(legend.position = "none")
+        theme_minimal_grid(line_size = 0.1) + theme(legend.position = "none")
       
     } else {
       
@@ -344,7 +345,7 @@ if(!is.null(opt$peaks)) {
         xlim(start(region.gr), end(region.gr)) +
         labs(y = "",
              x = "") +
-        theme_cowplot()
+        theme_minimal_grid(line_size = 0.1)
       
     }
 
@@ -593,7 +594,11 @@ p <- p.iclip
 ratios <- 2
 if(exists("p.peaks")) {
   p <- p / p.peaks
-  ratios <- c(ratios, 0.5)
+  if(length(peaks.files) == 1) {
+    ratios <- c(ratios, 0.25)
+  } else {
+    ratios <- c(ratios, 0.5)
+  }
 }
 if(exists("p.coverage")) {
   p <- p / p.coverage
