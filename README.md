@@ -83,7 +83,7 @@ Where multiple files are specified for a parameter, these should be space-separa
 
 * `-l` or `--labels` can be used to supply the unique names for the CLIP tracks and the order should match `--xlinks`. If not provided, the first 10 characters of the CLIP filename is used instead.
 
-* `-c` or `--colours` can be used to supply the colours for the CLIP tracks and the order should match `--xlinks`. If not provided, a default set of colours are automatically generated up to a maximum of 10 tracks.
+* `-c` or `--colours` can be used to supply the colours in hexadecimal format for the CLIP tracks and the order should match `--xlinks`. If not provided, a default set of colours are automatically generated up to a maximum of 10 tracks.
 
 * `--groups` can be used to supply the group to which each CLIP track belongs and can be used to facet the CLIP plot. There should be an entry for each track and the order should match `--xlinks`. If not provided CLIP tracks are all plotted together.
 
@@ -113,7 +113,7 @@ Where multiple files are specified for a parameter, these should be space-separa
 
 ### 4. Annotation plot
 
-* `-g` or `--gtf` should be used to supply the reference GTF file. GENCODE files have been tested.
+* `-g` or `--gtf` should be used to supply the reference GTF file. GENCODE files have been tested. The first time this GTF file is passed to CLIPplotR it will generate and save an SQL TxDb database in the same location as the GTF file. This will be used for all future runs with the same GTF file.
 
 * `-r` or `--region` should be used to specify the region of interest as:
 
