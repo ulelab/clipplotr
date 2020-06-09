@@ -20,11 +20,21 @@ CLIPplotR is a self-contained command-line tool written in R to facilitate compa
 
 CLIPplotR requires R to be installed on your system. It has been tested with version 3.6.2.
 
-To install CLIPplotR, either clone the repository with `git clone ulelab/clipplotr` for the latest version, or download from the [releases](https://github.com/ulelab/clipplotr/releases) page, which may be missing some of the latest features.
+To install CLIPplotR, either clone the repository with
+```
+git clone ulelab/clipplotr
+```
+for the latest version, or download from the [releases](https://github.com/ulelab/clipplotr/releases) page, which may be missing some of the latest features.
 
-CLIPplotR uses some R and Bioconductor packages. If they are not already installed, running the helper script `Rscript install_libraries.R` will do so.
+CLIPplotR uses some R (`optparse`, `BiocManager`, `ggplot2`, `ggthemes`, `cowplot`, `patchwork`, `smoother`, `zoo`, `data.table`) and Bioconductor packages (`rtracklayer`, `GenomicFeatures`). If they are not already installed, run the helper script:
+````
+Rscript install_libraries.R
+````
 
-The `CLIPplotR.R` file may need to be made executable on your system depending on the installation method. If you have permission to do so, this can be done by `chmod +x CLIPplotR.R`.
+The `CLIPplotR.R` file may need to be made executable on your system depending on the installation method. If you have permission to do so, this can be done with:
+```
+chmod +x CLIPplotR.R
+```
 
 ## Quickstart
 
@@ -41,9 +51,9 @@ This can be run with a command such as:
 
 ```
 ./CLIPplotR \
---xlinks "clip1.bedgraph clip2.bedgraph" \
+--xlinks 'clip1.bedgraph clip2.bedgraph' \
 --gtf genome.gtf \
---region ENSMUSG00000037400 \
+--region 'chr1:1000:2000:+' \
 --output plot.pdf
 ```
 
@@ -65,11 +75,11 @@ There is a lot of customisation that can be done to make the desired plot. These
 
 All plots are strand aware and only plot signal or features on the same strand as the region of interest. Additional optional plots are added dynamically to the CLIP plot.
 
-Where multiple files are specified for a parameter, these should be space-separated and in `" "`. BED, BEDGRAPH and GTF files can be gzip compressed.
+Where multiple files are specified for a parameter, these should be space-separated and in `' '`. BED, BEDGRAPH and GTF files can be gzip compressed.
 
 ### 1. CLIP plot
 
-* `-x` or `--xlinks` is used to supply the CLIP tracks. These are either in iCount bedgraph format (i.e. a 4-column BED file with the a positive score indicating the positive strand and a negative score the negative strand) or a standard 6-column BED file. In either case the score indicates the number of crosslinks at a given position. 
+* `-x` or `--xlinks` is used to supply the CLIP tracks. These are either in iCount bedgraph format (i.e. a 4-column BED file with the a positive score indicating the positive strand and a negative score the negative strand) or a standard 6-column BED file. In either case the score indicates the number of crosslinks at a given position.
 
 * `-l` or `--labels` can be used to supply the unique names for the CLIP tracks and the order should match `--xlinks`. If not provided, the first 10 characters of the CLIP filename is used instead.
 
@@ -91,7 +101,7 @@ Where multiple files are specified for a parameter, these should be space-separa
 
 * `w` or `--smoothing_window` can be used to specify the size of the smoothing window in nucleotides (default: 100 nt)
 
-* `--highlight` can be used to specify a region in the format `"start_coordinate:end_coordinate"`. This will be highlighted by grey shading. 
+* `--highlight` can be used to specify a region in the format `'start_coordinate:end_coordinate'`. This will be highlighted by grey shading. 
 
 ### 2. Peak plot
 
@@ -107,7 +117,7 @@ Where multiple files are specified for a parameter, these should be space-separa
 
 * `-r` or `--region` should be used to specify the region of interest as:
 
-    1. Colon-separated coordinates: `"chromosome:start_coordinate:end_coordinate:strand"`
+    1. Colon-separated coordinates: `'chromosome:start_coordinate:end_coordinate:strand'`
     2. The GENCODE/ENSEMBL gene id: `ENSMUSG00000037400`
     3. The gene name: `Atp11b`
 
