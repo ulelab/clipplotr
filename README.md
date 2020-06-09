@@ -152,7 +152,7 @@ Here, I have reproduced part of Figure 1C from [Zarnack et al. (2013)](https://d
 
 produces the figure:
 
-![Figure 1C from Zarnack et al. (2013)](https://github.com/ulelab/clipplotr/blob/dev/figures/CD55_C.pdf)
+![Figure 1C from Zarnack et al. (2013)](https://github.com/ulelab/clipplotr/blob/dev/figures/CD55_C.png)
 
 The plot is given the title of the region of interest.
 
