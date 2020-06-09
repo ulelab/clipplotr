@@ -19,6 +19,7 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("", "--coverage"), action = "store", type = "character", help = "bigwig coverage files (e.g. RNA-seq or Quantseq) - ensure same strand as region of interest (space separated)"),
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference GTF file (Gencode)"),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
+                    make_option(c("", "--highlight"), action = "store", type = "character", help = "Region to highlight as 35754106:35856276"),                    
                     make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize [default %default]", default = "libsize"),
                     make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, gaussian [default %default]", default = "rollmean"),
                     make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window [default %default]", default = 100),
@@ -250,14 +251,14 @@ if(!is.null(opt$groups)) {
 # Plot top half
 if(is.null(opt$colours)) {
 
-p.iclip <- ggplot(xlinks.dt, aes(x = start, y = smoothed, group = sample, color = sample)) +
-  geom_line() +
+p.iclip <- ggplot(xlinks.dt) +
+  geom_line(aes(x = start, y = smoothed, group = sample, color = sample)) +
   labs(title = opt$region,
        x = "",
        y = "Crosslink signal",
        colour = "") +
   scale_colour_tableau(palette = "Tableau 10") +
-  theme_cowplot() + theme(legend.position = "top") +
+  theme_minimal_grid() + theme(legend.position = "top") +
       xlim(start(region.gr),end(region.gr))
 
   } else {
@@ -265,14 +266,14 @@ p.iclip <- ggplot(xlinks.dt, aes(x = start, y = smoothed, group = sample, color 
     cols <- strsplit(opt$colours, " ")[[1]]
     names(cols) <- track_names
 
-    p.iclip <- ggplot(xlinks.dt, aes(x = start, y = smoothed, group = sample, color = sample)) +
-      geom_line() +
+    p.iclip <- ggplot(xlinks.dt) +
+      geom_line(aes(x = start, y = smoothed, group = sample, color = sample)) +
       labs(title = opt$region,
            x = "",
            y = "Crosslink signal",
            colour = "") +
       scale_colour_manual(values = cols) +
-      theme_cowplot() + theme(legend.position = "top") +
+      theme_minimal_grid(line_size = 0.1) + theme(legend.position = "top") +
       xlim(start(region.gr),end(region.gr))
 
 }
@@ -282,6 +283,21 @@ if(!is.null(opt$groups)) {
 
   p.iclip <- p.iclip + facet_grid(grp ~ .) + theme(strip.text.y = element_text(size = 8))
 
+}
+
+# Add highlight
+if(!is.null(opt$highlight)) {
+
+  # highlight.dt <- data.table(x1 = as.integer(strsplit(opt$highlight, ":")[[1]][1]),
+  #                            x2 = as.integer(strsplit(opt$highlight, ":")[[1]][2]),
+  #                            y1 = 0,
+  #                            y2 = max(ggplot_build(p.iclip)$layout$panel_scales_y[[1]]$range$range)) # Assumes not facetted with free scales
+  highlight.dt <- data.table(x1 = as.integer(strsplit(opt$highlight, ":")[[1]][1]),
+                             x2 = as.integer(strsplit(opt$highlight, ":")[[1]][2]),
+                             y1 = 0,
+                             y2 = Inf) # Assumes not facetted with free scales
+  p.iclip <- p.iclip + geom_rect(data = highlight.dt, aes(xmin = x1, xmax = x2, ymin = y1, ymax = y2), fill = "grey50", alpha = 0.2)
+  
 }
 
 # ==========
@@ -357,7 +373,7 @@ if(!is.null(opt$coverage)) {
          colour = "") +
     scale_colour_tableau(palette = "Seattle Grays") +
     facet_grid(exp ~ .) +
-    theme_cowplot() + theme(legend.position = "none") + theme(strip.text.y = element_text(size = 8)) +
+    theme_minimal_grid(line_size = 0.1) + theme(legend.position = "none") + theme(strip.text.y = element_text(size = 8)) +
     xlim(start(region.gr), end(region.gr))
 
 }
