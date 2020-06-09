@@ -105,7 +105,7 @@ Where multiple files are specified for a parameter, these should be space-separa
 
 ### 2. Peak plot
 
-* `-p` or `--peaks` can be used to supply the peak tracks. These should be in a standard 6-column BED format. Optionally, if a 10-column BED file is supplied then the 9th column `itemRgb` will be used to colour the peaks. This does not necessarily need to be peak intervals, but could be any features of interest. The names are the first 10 characters of the filename.
+* `-p` or `--peaks` can be used to supply the peak tracks. These should be in a standard 6-column BED format. Optionally, if a 9-column BED file is supplied then the 9th column `itemRgb` will be used to colour the peaks. These tracks do not necessarily need to be peak intervals, but could be any features of interest. The names are the first 10 characters of the filename.
 
 ### 3. Coverage plot
 
@@ -168,7 +168,7 @@ The plot is given the title of the region of interest.
 
 In the CLIP plot we can see in the highlighted region a peak of hnRNPC binding (hnRNPC). There is no overlapping U2AF65 binding when hnRNPC is present (U2AF65_WT), but upon knockdown of hnRNPC, U2AF65 is able to bind to this region as strongly as hnRNPC (U2AF65_KD).
 
-In the peak plot we can see that this binding site falls on the 3' end of reverse orientation _Alu_ element (Alu_rev).
+In the peak plot we can see that this binding site falls on the 5' end of reverse orientation _Alu_ element (Alu_rev).
 
 In the coverage track we can see from RNA-seq read coverage that there is little expression of this exon when hnRNPC is present (CTRL_plus), but upon two biological replicates of hnRNPC knockdown there is a large increase in expression (KD1_plus and KD2_plus).
 
