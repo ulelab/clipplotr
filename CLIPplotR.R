@@ -20,7 +20,8 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference GTF file (Gencode)"),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
                     make_option(c("", "--highlight"), action = "store", type = "character", help = "Region to highlight as 35754106:35856276"),                    
-                    make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize [default %default]", default = "libsize"),
+                    make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize, custom [default %default]", default = "libsize"),
+                    make_option(c("", "--size_factors"), action = "store", type = "character", help = "Size factors for custom normalisation (space separated)"),
                     make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, gaussian [default %default]", default = "rollmean"),
                     make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window [default %default]", default = 100),
                     make_option(c("-a", "--annotation"), action = "store", type = "character", help = "Annotation options: original, gene, transcript, none [default %default]", default = "transcript"),
@@ -67,9 +68,9 @@ if(is.null(opt$output)) {
 
 # Check switches
 
-if(!opt$normalisation %in% c("none", "maxpeak", "libsize")) {
+if(!opt$normalisation %in% c("none", "maxpeak", "libsize", "custom")) {
   
-  message("ERROR: normalisation needs to be one of none, maxpeak, or libsize")
+  message("ERROR: normalisation needs to be one of none, maxpeak, libsize, or custom")
   quit(save = "no")
   
 }
@@ -190,12 +191,28 @@ if(all(grepl("bedgraph$|bedgraph.gz$", xlink.files))) {
 } else {
 
   stop("Crosslink files need to be in iCount bedgraph or bed format.")
+  quit(save = "no")
 
 }
 
-libSizes <- lapply(xlinks, function(x) { sum(abs(x$score)) })
-# libSizes <- lapply(xlink.files, function(x) sum(abs(fread(x, select = 5)$V5))) # Not sure yet if this is faster?
+# Actually only need to do this if normalisation strategy is libSize
+if(opt$normalisation %in% c("libsize", "maxpeak", "none")) {
+  
+  libSizes <- lapply(xlinks, function(x) { sum(abs(x$score)) })
+  # libSizes <- lapply(xlink.files, function(x) sum(abs(fread(x, select = 5)$V5))) # Not sure yet if this is faster?
 
+} else if(opt$normalisation == "custom") {
+  
+  if(is.null(opt$size_factors)) {
+    
+    message("ERROR: No size factors defined")
+    quit(save = "no")
+    
+  }
+  
+  libSizes <- as.numeric(strsplit(opt$size_factors, " ")[[1]])
+  
+}
 # Subset for region and add in 0 count position
 xlinks <- lapply(xlinks, function(x) SubsetBedgraph(gr = x, selected.region.gr = region.gr))
 
@@ -229,7 +246,8 @@ message("Normalising")
 xlinks.dt[, norm := switch(opt$normalisation, 
                            "libsize" = (score * 1e6)/libSize,
                            "maxpeak" = score/max(score),
-                           "none" = score), 
+                           "none" = score,
+                           "custom" = score/libSize), 
           by = sample]
 
 # Do the smoothing
