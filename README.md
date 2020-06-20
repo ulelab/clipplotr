@@ -89,15 +89,18 @@ Where multiple files are specified for a parameter, these should be space-separa
 
 * `-n` or `--normalisation` can be used to specify how the CLIP tracks should be normalised:
 
-    1. `libsize` - by library size and scaled to crosslinks per million (default)
-    2. `maxpeak` - by the maximum peak within the region of interest
-    2. `none` - no normalisation, just plot raw crosslink counts.
+    1. `libsize` - by library size and scaled to crosslinks per million (default).
+    2. `maxpeak` - by the maximum peak within the region of interest.
+    3. `none` - no normalisation, just plot raw crosslink counts.
+    4. `custom` - by dividing counts with the provided size factors.
+
+* `--size_factors` can be used to specify the size factors for each CLIP track for `custom` normalisation.
 
 * `-s` or `--smoothing` can be use to specify how the CLIP track should be smoothed:
 
-    1. `rollmean` - by a rolling mean (default)
-    2. `gaussian` - by a Gaussian smooth (this may require a lot of resources for a large region)
-    2. `none` - no smoothing
+    1. `rollmean` - by a rolling mean (default).
+    2. `gaussian` - by a Gaussian smooth (this may require a lot of resources for a large region).
+    3. `none` - no smoothing.
 
 * `w` or `--smoothing_window` can be used to specify the size of the smoothing window in nucleotides (default: 100 nt)
 
