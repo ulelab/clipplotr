@@ -6,12 +6,13 @@ cd ~/projects/clipplotr/nostrand
 
 ~/Github/clipplotr/CLIPplotR.R -x 'ENCFF239CML.xl.bed.gz ENCFF170YQV.xl.bed.gz ENCFF515BTB.xl.bed.gz ENCFF537RYR.xl.bed.gz ENCFF296GDR.xl.bed.gz ENCFF212IIR.xl.bed.gz' \
 -l 'HepG2_IP1 HepG2_IP2 HepG2_SMI K562_IP1 K562_IP2 K562_SMI' \
+-c '#324376 #586BA4 #B4BCD6 #771434 #A54D69 #D2A6B4' \
 --groups 'HepG2 HepG2 HepG2 K562 K562 K562' \
 -p 'HepG2.bed.gz K562.bed.gz' \
 -g gencode.v34.annotation.gtf.gz \
 -r 'chr17:8458500:8469500:+' \
 -a transcript \
--o NDEL1.pdf
+-o NDEL1_libsize.pdf
 
 ~/Github/clipplotr/CLIPplotR.R -x 'ENCFF239CML.xl.bed.gz ENCFF170YQV.xl.bed.gz ENCFF515BTB.xl.bed.gz ENCFF537RYR.xl.bed.gz ENCFF296GDR.xl.bed.gz ENCFF212IIR.xl.bed.gz' \
 -l 'HepG2_IP1 HepG2_IP2 HepG2_SMI K562_IP1 K562_IP2 K562_SMI' \
@@ -19,9 +20,30 @@ cd ~/projects/clipplotr/nostrand
 -p 'HepG2.bed.gz K562.bed.gz' \
 -g gencode.v34.annotation.gtf.gz \
 -r 'chr17:8458500:8469500:+' \
+-a transcript \
+-o NDEL1_libsize.png
+
+~/Github/clipplotr/CLIPplotR.R -x 'ENCFF239CML.xl.bed.gz ENCFF170YQV.xl.bed.gz ENCFF515BTB.xl.bed.gz ENCFF537RYR.xl.bed.gz ENCFF296GDR.xl.bed.gz ENCFF212IIR.xl.bed.gz' \
+-l 'HepG2_IP1 HepG2_IP2 HepG2_SMI K562_IP1 K562_IP2 K562_SMI' \
+-c '#324376 #586BA4 #B4BCD6 #771434 #A54D69 #D2A6B4' \
+--groups 'HepG2 HepG2 HepG2 K562 K562 K562' \
+-p 'HepG2.bed.gz K562.bed.gz' \
+-g gencode.v34.annotation.gtf.gz \
+-r 'chr17:8458500:8469500:+' \
 -n maxpeak \
 -a transcript \
 -o NDEL1_maxpeak.pdf
+
+~/Github/clipplotr/CLIPplotR.R -x 'ENCFF239CML.xl.bed.gz ENCFF170YQV.xl.bed.gz ENCFF515BTB.xl.bed.gz ENCFF537RYR.xl.bed.gz ENCFF296GDR.xl.bed.gz ENCFF212IIR.xl.bed.gz' \
+-l 'HepG2_IP1 HepG2_IP2 HepG2_SMI K562_IP1 K562_IP2 K562_SMI' \
+-c '#324376 #586BA4 #B4BCD6 #771434 #A54D69 #D2A6B4' \
+--groups 'HepG2 HepG2 HepG2 K562 K562 K562' \
+-p 'HepG2.bed.gz K562.bed.gz' \
+-g gencode.v34.annotation.gtf.gz \
+-r 'chr17:8458500:8469500:+' \
+-n maxpeak \
+-a transcript \
+-o NDEL1_maxpeak.png
 
 # Zarnack
 
