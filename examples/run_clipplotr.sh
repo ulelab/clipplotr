@@ -85,3 +85,70 @@ cd ~/projects/clipplotr/zarnack
 --highlight '207513650:207513800' \
 -a transcript \
 -o CD55_C.pdf
+
+~/Github/clipplotr/CLIPplotR.R \
+-x 'hnRNPC_iCLIP_rep1_LUjh03_all_xlink_events.bedgraph.gz hnRNPC_iCLIP_rep2_LUjh25_all_xlink_events.bedgraph.gz U2AF65_iCLIP_ctrl_rep1_all_xlink_events.bedgraph.gz U2AF65_iCLIP_ctrl_rep2_all_xlink_events.bedgraph.gz U2AF65_iCLIP_KD1_rep2_all_xlink_events.bedgraph.gz U2AF65_iCLIP_KD2_rep1_all_xlink_events.bedgraph.gz' \
+-l 'hnRNPC_1 hnRNPC_2 U2AF65_WT_1 U2AF65_WT_2 U2AF65_KD_1 U2AF65_KD_2' \
+-c '#586BA4 #324376 #0AA398 #067E79 #A54D69 #771434' \
+--groups 'hnRNPC hnRNPC U2AF65_WT U2AF65_WT U2AF65_KD U2AF65_KD' \
+-n none \
+-s none \
+-g gencode.v34lift37.annotation.gtf.gz \
+-r 'chr1:207513000:207515000:+' \
+--highlight '207513650:207513800' \
+-a none \
+-o CD55_C_raw.pdf
+
+for i in 5 10 15 20 25 30 40 50 100 200 500; do 
+
+~/Github/clipplotr/CLIPplotR.R \
+-x 'hnRNPC_iCLIP_rep1_LUjh03_all_xlink_events.bedgraph.gz hnRNPC_iCLIP_rep2_LUjh25_all_xlink_events.bedgraph.gz U2AF65_iCLIP_ctrl_rep1_all_xlink_events.bedgraph.gz U2AF65_iCLIP_ctrl_rep2_all_xlink_events.bedgraph.gz U2AF65_iCLIP_KD1_rep2_all_xlink_events.bedgraph.gz U2AF65_iCLIP_KD2_rep1_all_xlink_events.bedgraph.gz' \
+-l 'hnRNPC_1 hnRNPC_2 U2AF65_WT_1 U2AF65_WT_2 U2AF65_KD_1 U2AF65_KD_2' \
+-c '#586BA4 #324376 #0AA398 #067E79 #A54D69 #771434' \
+--groups 'hnRNPC hnRNPC U2AF65_WT U2AF65_WT U2AF65_KD U2AF65_KD' \
+-n none \
+-s rollmean \
+-w $i \
+-g gencode.v34lift37.annotation.gtf.gz \
+-r 'chr1:207513000:207515000:+' \
+--highlight '207513650:207513800' \
+-a none \
+-o CD55_C_raw_rollmean_$i.pdf;
+
+done
+
+~/Github/clipplotr/CLIPplotR.R \
+-x 'hnRNPC_iCLIP_rep1_LUjh03_all_xlink_events.bedgraph.gz hnRNPC_iCLIP_rep2_LUjh25_all_xlink_events.bedgraph.gz U2AF65_iCLIP_ctrl_rep1_all_xlink_events.bedgraph.gz U2AF65_iCLIP_ctrl_rep2_all_xlink_events.bedgraph.gz U2AF65_iCLIP_KD1_rep2_all_xlink_events.bedgraph.gz U2AF65_iCLIP_KD2_rep1_all_xlink_events.bedgraph.gz' \
+-l 'hnRNPC_1 hnRNPC_2 U2AF65_WT_1 U2AF65_WT_2 U2AF65_KD_1 U2AF65_KD_2' \
+-c '#586BA4 #324376 #0AA398 #067E79 #A54D69 #771434' \
+--groups 'hnRNPC hnRNPC U2AF65_WT U2AF65_WT U2AF65_KD U2AF65_KD' \
+-n libsize \
+-s rollmean \
+-w 50 \
+-g gencode.v34lift37.annotation.gtf.gz \
+-r 'chr1:207513000:207515000:+' \
+--highlight '207513650:207513800' \
+-a none \
+-o CD55_C_libsize_rollmean_50.pdf
+
+~/Github/clipplotr/CLIPplotR.R \
+-x 'hnRNPC_iCLIP_rep1_LUjh03_all_xlink_events.bedgraph.gz hnRNPC_iCLIP_rep2_LUjh25_all_xlink_events.bedgraph.gz U2AF65_iCLIP_ctrl_rep1_all_xlink_events.bedgraph.gz U2AF65_iCLIP_ctrl_rep2_all_xlink_events.bedgraph.gz U2AF65_iCLIP_KD1_rep2_all_xlink_events.bedgraph.gz U2AF65_iCLIP_KD2_rep1_all_xlink_events.bedgraph.gz' \
+-l 'hnRNPC_1 hnRNPC_2 U2AF65_WT_1 U2AF65_WT_2 U2AF65_KD_1 U2AF65_KD_2' \
+-c '#586BA4 #324376 #0AA398 #067E79 #A54D69 #771434' \
+--groups 'hnRNPC hnRNPC U2AF65_WT U2AF65_WT U2AF65_KD U2AF65_KD' \
+-n maxpeak \
+-s rollmean \
+-w 50 \
+-g gencode.v34lift37.annotation.gtf.gz \
+-r 'chr1:207513000:207515000:+' \
+--highlight '207513650:207513800' \
+-a none \
+-o CD55_C_maxpeak_rollmean_50.pdf
+
+
+
+
+
+
+
+
