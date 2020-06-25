@@ -208,7 +208,7 @@ if (!is.null(opt$label)) {
 } else {
   
   # track_names <- lapply(strsplit(opt$xlinks, " ")[[1]], function(x) gsub(".bedgraph", "", basename(x)))
-  track_names <- lapply(strsplit(opt$xlinks, " ")[[1]], function(x) substr(x, start = 1, stop = 10))
+  track_names <- lapply(strsplit(opt$xlinks, " ")[[1]], function(x) substr(basename(x), start = 1, stop = 10))
   
 }
 
