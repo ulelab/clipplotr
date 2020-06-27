@@ -94,7 +94,7 @@ Where multiple files are specified for a parameter, these should be space-separa
     3. `none` - no normalisation, just plot raw crosslink counts.
     4. `custom` - by dividing counts with the provided size factors.
 
-* `--size_factors` can be used to specify the size factors for each CLIP track for `custom` normalisation.
+* `--size_factors` can be used to specify the size factors for each CLIP track for `custom` normalisation. The score will be divided by the size factor.
 
 * `-s` or `--smoothing` can be use to specify how the CLIP track should be smoothed:
 
@@ -176,3 +176,30 @@ In the peak plot we can see that this binding site falls on the 5' end of revers
 In the coverage track we can see from RNA-seq read coverage that there is little expression of this exon when hnRNPC is present (CTRL_plus), but upon two biological replicates of hnRNPC knockdown there is a large increase in expression (KD1_plus and KD2_plus).
 
 In the annotation track we can see this is contained within in the CD55 gene, which has the ENSEMBL ID ENSG000001962352 with the GENCODE suffix 16_8. Although there are many transcripts where this exon is not expressed, there are two annotated ones where it is in the latest GENCODE V34 annotation. There are no other genes in this region of interest.
+
+## Test data
+
+To try out _clipplotr_ a small test dataset has been created based on the example plot in the `test` directory in the `clipplotr` repository.
+
+```
+cd test
+
+../CLIPplotR.R \
+-x 'test_hnRNPC_iCLIP_rep1_LUjh03_all_xlink_events.bedgraph.gz test_hnRNPC_iCLIP_rep2_LUjh25_all_xlink_events.bedgraph.gz test_U2AF65_iCLIP_ctrl_rep1_all_xlink_events.bedgraph.gz test_U2AF65_iCLIP_ctrl_rep2_all_xlink_events.bedgraph.gz test_U2AF65_iCLIP_KD1_rep2_all_xlink_events.bedgraph.gz test_U2AF65_iCLIP_KD2_rep1_all_xlink_events.bedgraph.gz' \
+-l 'hnRNPC_1 hnRNPC_2 U2AF65_WT_1 U2AF65_WT_2 U2AF65_KD_1 U2AF65_KD_2' \
+-c '#586BA4 #324376 #0AA398 #067E79 #A54D69 #771434' \
+--groups 'hnRNPC hnRNPC U2AF65_WT U2AF65_WT U2AF65_KD U2AF65_KD' \
+-n custom \
+--size_factors '4.869687 9.488133 1.781117 10.135903 4.384385 8.227587' \
+-s rollmean \
+-w 50 \
+-p 'test_Alu_rev.bed.gz' \
+--coverage 'test_CTRL_plus.bigwig test_KD1_plus.bigwig test_KD2_plus.bigwig' \
+-g CD55_gencode.v34lift37.annotation.gtf.gz \
+-r 'chr1:207513000:207515000:+' \
+--highlight '207513650:207513800' \
+-a transcript \
+-o test.pdf
+```
+
+Note as we cannot calculate library sizes from the small subset dataset, here I have used custom normalisation with pre-calculated library size factors from the full CLIP bedgraph files.
