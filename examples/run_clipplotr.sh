@@ -146,6 +146,26 @@ done
 -o CD55_C_maxpeak_rollmean_50.pdf
 
 
+# ==========
+# Test
+# ==========
+
+~/Github/clipplotr/CLIPplotR.R \
+-x 'test_hnRNPC_iCLIP_rep1_LUjh03_all_xlink_events.bedgraph.gz test_hnRNPC_iCLIP_rep2_LUjh25_all_xlink_events.bedgraph.gz test_U2AF65_iCLIP_ctrl_rep1_all_xlink_events.bedgraph.gz test_U2AF65_iCLIP_ctrl_rep2_all_xlink_events.bedgraph.gz test_U2AF65_iCLIP_KD1_rep2_all_xlink_events.bedgraph.gz test_U2AF65_iCLIP_KD2_rep1_all_xlink_events.bedgraph.gz' \
+-l 'hnRNPC_1 hnRNPC_2 U2AF65_WT_1 U2AF65_WT_2 U2AF65_KD_1 U2AF65_KD_2' \
+-c '#586BA4 #324376 #0AA398 #067E79 #A54D69 #771434' \
+--groups 'hnRNPC hnRNPC U2AF65_WT U2AF65_WT U2AF65_KD U2AF65_KD' \
+-n custom \
+--size_factors '4.869687 9.488133 1.781117 10.135903 4.384385 8.227587' \
+-s rollmean \
+-w 50 \
+-p 'test_Alu_rev.bed.gz' \
+--coverage 'test_CTRL_plus.bigwig test_KD1_plus.bigwig test_KD2_plus.bigwig' \
+-g gencode.v34lift37.annotation.gtf.gz \
+-r 'chr1:207513000:207515000:+' \
+--highlight '207513650:207513800' \
+-a transcript \
+-o test.pdf
 
 
 
