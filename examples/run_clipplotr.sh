@@ -161,7 +161,7 @@ done
 -w 50 \
 -p 'test_Alu_rev.bed.gz' \
 --coverage 'test_CTRL_plus.bigwig test_KD1_plus.bigwig test_KD2_plus.bigwig' \
--g gencode.v34lift37.annotation.gtf.gz \
+-g CD55_gencode.v34lift37.annotation.gtf.gz \
 -r 'chr1:207513000:207515000:+' \
 --highlight '207513650:207513800' \
 -a transcript \
