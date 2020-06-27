@@ -7,6 +7,7 @@
 3. [Quickstart](#quickstart)
 4. [Slowstart](#slowstart)
 5. [Example](#example)
+5. [Test data](#test-data)
 
 ## About CLIPplotR
 
@@ -179,7 +180,7 @@ In the annotation track we can see this is contained within in the CD55 gene, wh
 
 ## Test data
 
-To try out _clipplotr_ a small test dataset has been created based on the example plot in the `test` directory in the `clipplotr` repository.
+To try out _clipplotr_ a small test dataset has been created based on the example plot above.
 
 ```
 cd test
