@@ -22,6 +22,7 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("", "--highlight"), action = "store", type = "character", help = "Region to highlight as 35754106:35856276"),                    
                     make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize, custom [default %default]", default = "libsize"),
                     make_option(c("", "--size_factors"), action = "store", type = "character", help = "Size factors for custom normalisation (space separated)"),
+                    make_option(c("", "--scale_y"), action = "store_true", type = "logical", help = "Scale facetted CLIP y-axis", default = FALSE),
                     make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, gaussian [default %default]", default = "rollmean"),
                     make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window [default %default]", default = 100),
                     make_option(c("-a", "--annotation"), action = "store", type = "character", help = "Annotation options: original, gene, transcript, none [default %default]", default = "transcript"),
@@ -72,6 +73,17 @@ if(!opt$normalisation %in% c("none", "maxpeak", "libsize", "custom")) {
   
   message("ERROR: normalisation needs to be one of none, maxpeak, libsize, or custom")
   quit(save = "no")
+  
+}
+
+if(opt$normalisation == "custom") {
+  
+  if(is.null(opt$size_factors)) {
+  
+  message("ERROR: for custom normalisation size factors need to be provided")
+  quit(save = "no")
+
+  }
   
 }
 
@@ -245,7 +257,9 @@ setkey(xlinks.dt, sample)
 message("Normalising")
 xlinks.dt[, norm := switch(opt$normalisation, 
                            "libsize" = (score * 1e6)/libSize,
-                           "maxpeak" = score/max(score),
+                          #  "maxpeak" = score/max(score),
+                          #  "maxpeak" = (score * 1e6)/libSize,
+                           "maxpeak" = score,
                            "none" = score,
                            "custom" = score/libSize), 
           by = sample]
@@ -258,6 +272,9 @@ xlinks.dt[, smoothed := switch(opt$smoothing,
                                "none" = norm), 
           by = sample]
 
+# Now normalise to max peak after smoothing
+if(opt$normalisation == "maxpeak") xlinks.dt[, smoothed := smoothed/(max(smoothed)), by = sample]
+
 # Assign groups
 if(!is.null(opt$groups)) {
 
@@ -267,6 +284,12 @@ if(!is.null(opt$groups)) {
 
 }
 
+y.label <- switch(opt$normalisation, 
+                  "libsize" = "Crosslink signal\n(counts per million)",
+                  "maxpeak" = "Crosslink signal\n(normalised to max peak)",
+                  "none" = "Raw crosslink signal",
+                  "custom" = "Crosslink signal\n(custom normalisation)")
+
 # Plot top half
 if(is.null(opt$colours)) {
 
@@ -274,7 +297,8 @@ p.iclip <- ggplot(xlinks.dt) +
   geom_line(aes(x = start, y = smoothed, group = sample, color = sample)) +
   labs(title = opt$region,
        x = "",
-       y = "Crosslink signal",
+      #  y = "Crosslink signal",
+      y = y.label,
        colour = "") +
   scale_colour_tableau(palette = "Tableau 10") +
   theme_minimal_grid(line_size = 0.1) + theme(legend.position = "top") +
@@ -289,7 +313,8 @@ p.iclip <- ggplot(xlinks.dt) +
       geom_line(aes(x = start, y = smoothed, group = sample, color = sample)) +
       labs(title = opt$region,
            x = "",
-           y = "Crosslink signal",
+          #  y = "Crosslink signal",
+          y = y.label,
            colour = "") +
       scale_colour_manual(values = cols) +
       theme_minimal_grid(line_size = 0.1) + theme(legend.position = "top") +
@@ -297,11 +322,23 @@ p.iclip <- ggplot(xlinks.dt) +
 
 }
 
+# Change y-axis label depending on normalisation
+
+
+
+
 # Facet if groups
 if(!is.null(opt$groups)) {
 
-  p.iclip <- p.iclip + facet_grid(grp ~ .) + theme(strip.text.y = element_text(size = 8))
+  if(opt$scale_y == TRUE) {
 
+    p.iclip <- p.iclip + facet_grid(grp ~ ., scales = "free_y") + theme(strip.text.y = element_text(size = 10))
+
+  } else {
+
+    p.iclip <- p.iclip + facet_grid(grp ~ .) + theme(strip.text.y = element_text(size = 10))
+
+  }
 }
 
 # Add highlight
@@ -392,7 +429,7 @@ if(!is.null(opt$coverage)) {
          colour = "") +
     scale_colour_tableau(palette = "Seattle Grays") +
     facet_grid(exp ~ .) +
-    theme_minimal_grid(line_size = 0.1) + theme(legend.position = "none") + theme(strip.text.y = element_text(size = 8)) +
+    theme_minimal_grid(line_size = 0.1) + theme(legend.position = "none") + theme(strip.text.y = element_text(size = 10)) +
     xlim(start(region.gr), end(region.gr))
 
 }
