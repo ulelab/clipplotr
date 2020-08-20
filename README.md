@@ -51,7 +51,7 @@ All input files can be gzip compressed.
 This can be run with a command such as:
 
 ```
-./CLIPplotR \
+./CLIPplotR.R \
 --xlinks 'clip1.bedgraph clip2.bedgraph' \
 --gtf genome.gtf \
 --region 'chr1:1000:2000:+' \
@@ -63,7 +63,7 @@ This can be run with a command such as:
 To get all the parameters with explanations, run:
 
 ```
-./CLIPplotR --help
+./CLIPplotR.R --help
 ```
 
 There is a lot of customisation that can be done to make the desired plot. These are divided into:
