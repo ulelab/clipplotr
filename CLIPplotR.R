@@ -471,6 +471,8 @@ if(opt$annotation == "gene") {
   sel.region.tiled.dt <- as.data.table(sel.region.tiled)
   setnames(sel.region.tiled.dt, "group_name", "gene_id")
   
+  if(as.character(strand(region.gr)) == "-") setnames(sel.region.tiled.dt, c("start", "end"), c("end", "start"))
+  
   # Exons
   sel.exons.dt <- as.data.table(sel.exons)
   sel.exons.dt$gene_id <- as.character(sel.exons.dt$gene_id) # otherwise type is AsIs
@@ -523,6 +525,8 @@ if(opt$annotation == "transcript") {
   sel.region.tiled.dt <- as.data.table(sel.region.tiled)
   sel.region.tiled.dt[, group := NULL]
   setnames(sel.region.tiled.dt, "group_name", "transcript_id")
+  if(as.character(strand(region.gr)) == "-") setnames(sel.region.tiled.dt, c("start", "end"), c("end", "start"))
+  
   sel.region.tiled.dt <- merge(sel.region.tiled.dt, tx.order.dt, by = "transcript_id")
   
   # CDS
