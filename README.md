@@ -1,17 +1,17 @@
-# CLIPplotR
+# _clipplotr_
 
 ## Table of contents
 
-1. [About CLIPplotR](#about-clipplotr)
+1. [About _clipplotr_](#about-clipplotr)
 2. [Installation](#installation)
 3. [Quickstart](#quickstart)
 4. [Slowstart](#slowstart)
 5. [Example](#example)
 5. [Test data](#test-data)
 
-## About CLIPplotR
+## About _clipplotr_
 
-CLIPplotR is a self-contained command-line tool written in R to facilitate comparative visualisation of CLIP data. It plots multiple CLIP tracks across a gene or region of interest with a range of normalisation and smoothing options. It can also optionally plot:
+_clipplotr_ is a self-contained command-line tool written in R to facilitate comparative visualisation of CLIP data. It plots multiple CLIP tracks across a gene or region of interest with a range of normalisation and smoothing options. It can also optionally plot:
 
 1. A peak track showing CLIP peaks. (This can also be used with the appropriate input to show other interesting features, e.g. _Alus_)
 2. A coverage track which plots orthogonal data, e.g. coverage for the region of interest from RNAseq or Quantseq experiments.
@@ -19,22 +19,22 @@ CLIPplotR is a self-contained command-line tool written in R to facilitate compa
 
 ## Installation
 
-CLIPplotR requires R to be installed on your system. It has been tested with version 3.6.2.
+_clipplotr_ requires R to be installed on your system. It has been tested with version 3.6.2.
 
-To install CLIPplotR, either clone the repository with
+To install _clipplotr_, either clone the repository with
 ```
 git clone ulelab/clipplotr
 ```
 for the latest version, or download from the [releases](https://github.com/ulelab/clipplotr/releases) page, which may be missing some of the latest features.
 
-CLIPplotR uses some R (`optparse`, `BiocManager`, `ggplot2`, `ggthemes`, `cowplot`, `patchwork`, `smoother`, `zoo`, `data.table`) and Bioconductor packages (`rtracklayer`, `GenomicFeatures`). If they are not already installed, run the helper script:
+_clipplotr_ uses some R (`optparse`, `BiocManager`, `ggplot2`, `ggthemes`, `cowplot`, `patchwork`, `smoother`, `zoo`, `data.table`) and Bioconductor packages (`rtracklayer`, `GenomicFeatures`). If they are not already installed, run the helper script:
 ````
 Rscript install_libraries.R
 ````
 
-The `CLIPplotR.R` file may need to be made executable on your system depending on the installation method. If you have permission to do so, this can be done with:
+The `clipplotr` file may need to be made executable on your system depending on the installation method. If you have permission to do so, this can be done with:
 ```
-chmod +x CLIPplotR.R
+chmod +x clipplotr
 ```
 
 ## Quickstart
@@ -51,7 +51,7 @@ All input files can be gzip compressed.
 This can be run with a command such as:
 
 ```
-./CLIPplotR.R \
+./clipplotr \
 --xlinks 'clip1.bedgraph clip2.bedgraph' \
 --gtf genome.gtf \
 --region 'chr1:1000:2000:+' \
@@ -63,7 +63,7 @@ This can be run with a command such as:
 To get all the parameters with explanations, run:
 
 ```
-./CLIPplotR.R --help
+./clipplotr --help
 ```
 
 There is a lot of customisation that can be done to make the desired plot. These are divided into:
@@ -90,12 +90,14 @@ Where multiple files are specified for a parameter, these should be space-separa
 
 * `-n` or `--normalisation` can be used to specify how the CLIP tracks should be normalised:
 
-    1. `libsize` - by library size and scaled to crosslinks per million (default).
-    2. `maxpeak` - by the maximum peak within the region of interest.
+    1. `libsize` - by experiment library size and scaled to crosslinks per million (default).
+    2. `maxpeak` - by the maximum peak (after smoothing) within the region of interest for the experiment.
     3. `none` - no normalisation, just plot raw crosslink counts.
     4. `custom` - by dividing counts with the provided size factors.
 
 * `--size_factors` can be used to specify the size factors for each CLIP track for `custom` normalisation. The score will be divided by the size factor.
+
+* `--scale_y` can be used to scale the y-axis for different groups.
 
 * `-s` or `--smoothing` can be use to specify how the CLIP track should be smoothed:
 
@@ -117,7 +119,7 @@ Where multiple files are specified for a parameter, these should be space-separa
 
 ### 4. Annotation plot
 
-* `-g` or `--gtf` should be used to supply the reference GTF file. GENCODE files have been tested. The first time this GTF file is passed to CLIPplotR it will generate and save an SQL TxDb database in the same location as the GTF file. This will be used for all future runs with the same GTF file.
+* `-g` or `--gtf` should be used to supply the reference GTF file. GENCODE files have been tested. The first time this GTF file is passed to _clipplotr_ it will generate and save an SQL TxDb database in the same location as the GTF file. This will be used for all future runs with the same GTF file.
 
 * `-r` or `--region` should be used to specify the region of interest as:
 
@@ -130,7 +132,7 @@ Where multiple files are specified for a parameter, these should be space-separa
     1. `transcript` - all transcripts in the region are plotted and coloured by gene (default)
     2. `gene` - collapsed meta-genes (each containing all exons of a gene) in the region are plotted and coloured by gene
     3. `none` - annotation is not plotted
-    4. `original` - plots the original CLIPplotR annotation using `ggbio` (will be deprecated due to some bugs)
+    4. `original` - plots the original _clipplotr_ annotation using `ggbio` (will be deprecated due to some bugs)
 
 ### 5. General
 
@@ -142,12 +144,12 @@ Where multiple files are specified for a parameter, these should be space-separa
 
 ## Example
 
-This is an example which shows many of the features of CLIPplotR in action.
+This is an example which shows many of the features of _clipplotr_ in action.
 
 Here, I have reproduced part of Figure 1C from [Zarnack et al. (2013)](https://doi.org/10.1016/j.cell.2012.12.023) largely using publicly available pre-processed data (the BIGWIGs for the RNA-seq had to be generated from the raw files).
 
 ```
-./CLIPplotR.R \
+./clipplotr \
 -x 'hnRNPC_iCLIP_rep1_LUjh03_all_xlink_events.bedgraph.gz hnRNPC_iCLIP_rep2_LUjh25_all_xlink_events.bedgraph.gz U2AF65_iCLIP_ctrl_rep1_all_xlink_events.bedgraph.gz U2AF65_iCLIP_ctrl_rep2_all_xlink_events.bedgraph.gz U2AF65_iCLIP_KD1_rep2_all_xlink_events.bedgraph.gz U2AF65_iCLIP_KD2_rep1_all_xlink_events.bedgraph.gz' \
 -l 'hnRNPC_1 hnRNPC_2 U2AF65_WT_1 U2AF65_WT_2 U2AF65_KD_1 U2AF65_KD_2' \
 -c '#586BA4 #324376 #0AA398 #067E79 #A54D69 #771434' \
@@ -185,7 +187,7 @@ To try out _clipplotr_ a small test dataset has been created based on the exampl
 ```
 cd test
 
-../CLIPplotR.R \
+../clipplotr \
 -x 'test_hnRNPC_iCLIP_rep1_LUjh03_all_xlink_events.bedgraph.gz test_hnRNPC_iCLIP_rep2_LUjh25_all_xlink_events.bedgraph.gz test_U2AF65_iCLIP_ctrl_rep1_all_xlink_events.bedgraph.gz test_U2AF65_iCLIP_ctrl_rep2_all_xlink_events.bedgraph.gz test_U2AF65_iCLIP_KD1_rep2_all_xlink_events.bedgraph.gz test_U2AF65_iCLIP_KD2_rep1_all_xlink_events.bedgraph.gz' \
 -l 'hnRNPC_1 hnRNPC_2 U2AF65_WT_1 U2AF65_WT_2 U2AF65_KD_1 U2AF65_KD_2' \
 -c '#586BA4 #324376 #0AA398 #067E79 #A54D69 #771434' \
