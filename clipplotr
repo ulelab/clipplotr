@@ -123,6 +123,7 @@ ImportiMapsBedgraph <- function(bedgraph.file) {
   # Convert scores to positives now that strands assigned
   bg$score <- abs(bg$score)
   
+  seqlevelsStyle(bg) <- "UCSC"
   return(bg)
   
 }
@@ -148,6 +149,7 @@ SubsetBedgraph <- function(gr, selected.region.gr) {
 message("Reading in annotation from GTF")
 
 gtf <- rtracklayer::import.gff2(opt$gtf)
+seqlevelsStyle(gtf) <- "UCSC"
 genes.gr <- gtf[gtf$type == "gene"]
 
 # Create TxDb if doesn't already exist
@@ -155,11 +157,13 @@ if(file.exists(gsub(".gtf.gz|.gtf", ".sqlite", opt$gtf))) {
 
   message("Loading pre-existing annotation database")    
   TxDb <- loadDb(gsub(".gtf.gz|.gtf", ".sqlite", opt$gtf))
+  seqlevelsStyle(TxDb) <- "UCSC"
   
 } else {
 
   message("Creating annotation database for future runs")
   TxDb <- suppressMessages(makeTxDbFromGFF(opt$gtf))
+  seqlevelsStyle(TxDb) <- "UCSC"
   saveDb(TxDb, gsub(".gtf.gz|.gtf", ".sqlite", opt$gtf))
 
 }
@@ -177,7 +181,8 @@ if(grepl("^ENS", opt$region)) {
                        strand = Rle(sapply(strsplit(opt$region, ":"), "[[", 4)))
 } else {
   # region.gr <- genes.gr[grepl(opt$region, genes.gr$gene_name)]
-  region.gr <- genes.gr[opt$region == genes.gr$gene_name]  
+  region.gr <- genes.gr[opt$region == genes.gr$gene_name]
+  seqlevelsStyle(region.gr) <- "UCSC"
 
 }
 
@@ -197,8 +202,13 @@ if(all(grepl("bedgraph$|bedgraph.gz$", xlink.files))) {
 
 } else if(all(grepl("bed$|bed.gz$", xlink.files))) {
 
+  xlinks <- lapply(xlink.files, function(x) {
+    
+    xlinks.gr <- import.bed(x)
+    seqlevelsStyle(xlinks.gr) <- "UCSC"
+    return(xlinks.gr)
 
-  xlinks <- lapply(xlink.files, import.bed)
+  })
 
 } else {
 
@@ -232,7 +242,6 @@ xlinks <- lapply(xlinks, function(x) SubsetBedgraph(gr = x, selected.region.gr =
 if (!is.null(opt$label)) {
   
   track_names <- strsplit(opt$label, " ")[[1]]
-
   
 } else {
   
@@ -366,7 +375,13 @@ if(!is.null(opt$peaks)) {
 
   message("Plotting peaks")
   peaks.files <- strsplit(opt$peaks, " ")[[1]]
-  peaks.grl <- lapply(peaks.files, import.bed)
+  peaks.grl <- lapply(peaks.files, function(x) {
+    
+    gr <- import.bed(x)
+    seqlevelsStyle(gr) <- "UCSC"
+    return(gr)
+
+  })
   peaks.grl <- lapply(peaks.grl, function(x) subsetByOverlaps(x, region.gr, ignore.strand = FALSE))
 
   peaks.dt <- rbindlist(lapply(peaks.grl, as.data.table))
@@ -416,7 +431,16 @@ if(!is.null(opt$coverage)) {
   
   message("Plotting coverage")
   coverage.files <- strsplit(opt$coverage, " ")[[1]]
-  coverage.grl <- lapply(coverage.files, import.bw, selection = region.gr) # addition selection speeds up loading
+  # coverage.grl <- lapply(coverage.files, import.bw, selection = region.gr) # addition selection speeds up loading
+  coverage.grl <- lapply(coverage.files, function(x) {
+
+    gr <- import.bw(x)
+    seqlevelsStyle(gr) <- "UCSC"
+    gr <- subsetByOverlaps(gr, region.gr)
+    return(gr)
+
+  })
+
   coverage.grl <- lapply(coverage.grl, function(x) SubsetBedgraph(gr = x, selected.region.gr = region.gr))
   # coverage.grl <- lapply(peaks.grl, function(x) subsetByOverlaps(x, region.gr, ignore.strand = FALSE))
   coverage.dt <- rbindlist(lapply(coverage.grl, as.data.table))
