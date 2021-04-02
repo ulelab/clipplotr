@@ -363,6 +363,7 @@ if(!is.null(opt$highlight)) {
 
 if(!is.null(opt$auxiliary)) {
 
+  auxiliary.files <- strsplit(opt$auxiliary, " ")[[1]]
   # Names of bedgraphs: If name is supplied use that, if not then generate a name from the file name
   if (!is.null(opt$auxiliary_labels)) {
   auxiliary.labels <- strsplit(opt$auxiliary_labels, " ")[[1]]
@@ -371,7 +372,6 @@ if(!is.null(opt$auxiliary)) {
   }
 
   message("Plotting auxiliary track(s)")
-  auxiliary.files <- strsplit(opt$auxiliary, " ")[[1]]
   auxiliary.grl <- lapply(auxiliary.files, import.bed)
   auxiliary.grl <- lapply(auxiliary.grl, function(x) subsetByOverlaps(x, region.gr, ignore.strand = FALSE))
 
