@@ -28,6 +28,8 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("-a", "--annotation"), action = "store", type = "character", help = "Annotation options: original, gene, transcript, none [default %default]", default = "transcript"),
                     make_option(c("", "--size_x"), action = "store", type = "integer", help = "Plot size in mm (x) [default: %default]", default = 210),
                     make_option(c("", "--size_y"), action = "store", type = "integer", help = "Plot size in mm (y) [default: %default]", default = 297),
+                    make_option(c("-p", "--ratios"), action = "store", type = "character", help = "Specify plot ratios in order auxiliary tracks, coverage tracks, annotation tracks (space separated). Put 0 if\
+                     any of these track types are absent."),
                     make_option(c("-o", "--output"), action = "store", type = "character", help = "Output plot filename"))
 
 opt_parser = OptionParser(option_list = option_list)
