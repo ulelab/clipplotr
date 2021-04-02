@@ -664,31 +664,46 @@ p.annot <- p.annot@ggplot
 # Part 3 - combine plots
 # ==========
 
-if(is.null(opt$ratios){
-    p <- p.iclip
-    ratios <- 2
-    if(exists("p.peaks")) {
-      p <- p / p.peaks
-      if(length(peaks.files) == 1) {
-        ratios <- c(ratios, 0.25)
-      } else {
-        ratios <- c(ratios, 0.5)
-      }
+if(is.null(opt$ratios)){ #if the user hasnt specified ratios
+  p <- p.iclip
+  ratios <- 2
+  if(exists("p.peaks")) {
+    p <- p / p.peaks
+    if(length(peaks.files) == 1) {
+      ratios <- c(ratios, 0.25)
+    } else {
+      ratios <- c(ratios, 0.5)
     }
-    if(exists("p.coverage")) {
-      p <- p / p.coverage
-      ratios <- c(ratios, 2)
-    }
-    if(exists("p.annot")) {
-      p <- p / p.annot
-      ratios <- c(ratios, 3)
-      # Could change this to ifelse depending on annotation style
-    }
-
-    p <- p + plot_layout(heights = ratios) 
-} else {
-
+  }
+  if(exists("p.coverage")) {
+    p <- p / p.coverage
+    ratios <- c(ratios, 2)
+  }
+  if(exists("p.annot")) {
+    p <- p / p.annot
+    ratios <- c(ratios, 3)
+    # Could change this to ifelse depending on annotation style
+  }
+  p <- p + plot_layout(heights = ratios) 
+} else { #if the user has specified ratios
+  rts = unlist(strsplit(opt$ratios, " "))
+  p <- p.iclip
+  ratios <- rts[[1]]
+  if(exists("p.peaks")) {
+    p <- p / p.peaks
+    ratios <- c(ratios, rts[[2]])
+  }
+  if(exists("p.coverage")) {
+    p <- p / p.coverage
+    ratios <- c(ratios, rts[[3]])
+  }
+  if(exists("p.annot")) {
+    p <- p / p.annot
+    ratios <- c(ratios, rts[[4]])
+  }
+  p <- p + plot_layout(heights = ratios) 
 }
+
 ggsave(p, height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
 
 message("Completed")
