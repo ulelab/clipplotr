@@ -279,8 +279,8 @@ if(opt$normalisation == "maxpeak") xlinks.dt[, smoothed := smoothed/(max(smoothe
 # Assign groups
 if(!is.null(opt$groups)) {
 
-  groups.dt <- data.table(sample = track_names, grp = strsplit(opt$group, " ")[[1]])
-  groups.dt$grp <- factor(groups.dt$grp, levels = unique(strsplit(opt$group, " ")[[1]]))
+  groups.dt <- data.table(sample = track_names, grp = strsplit(opt$group, ",")[[1]])
+  groups.dt$grp <- factor(groups.dt$grp, levels = unique(strsplit(opt$group, ",")[[1]]))
   xlinks.dt <- merge(xlinks.dt, groups.dt, by = "sample")
 
 }
@@ -333,11 +333,11 @@ if(!is.null(opt$groups)) {
 
   if(opt$scale_y == TRUE) {
 
-    p.iclip <- p.iclip + facet_grid(grp ~ ., scales = "free_y") + theme(strip.text.y = element_text(size = 10))
+    p.iclip <- p.iclip + facet_grid(grp ~ ., scales = "free_y", labeller=label_wrap_gen(20)) + theme(strip.text.y = element_text(size = 10, angle=0))
 
   } else {
 
-    p.iclip <- p.iclip + facet_grid(grp ~ .) + theme(strip.text.y = element_text(size = 10))
+    p.iclip <- p.iclip + facet_grid(grp ~ ., labeller=label_wrap_gen(20)) + theme(strip.text.y = element_text(size = 10, angle=0))
 
   }
 }
@@ -433,8 +433,8 @@ if(!is.null(opt$coverage)) {
          y = "Coverage",
          colour = "") +
     scale_colour_tableau(palette = "Seattle Grays") +
-    facet_grid(exp ~ .) +
-    theme_minimal_grid(line_size = 0.1) + theme(legend.position = "none") + theme(strip.text.y = element_text(size = 10)) +
+    facet_grid(exp ~ ., labeller=label_wrap_gen(20)) +
+    theme_minimal_grid(line_size = 0.1) + theme(legend.position = "none") + theme(strip.text.y = element_text(size = 10, angle=0)) +
     xlim(start(region.gr), end(region.gr))
 
 }
