@@ -12,10 +12,11 @@
 suppressPackageStartupMessages(library(optparse))
 
 option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "character", help = "Input iCLIP bedgraphs (space separated)"),
-                    make_option(c("-l", "--labels"), action = "store", type = "character", help = "Unique iCLIP bedgraph labels (space separated)"),
+                    make_option(c("-l", "--labels"), action = "store", type = "character", help = "Unique iCLIP bedgraph labels (comma separated in same order as files)"),
                     make_option(c("-c", "--colours"), action = "store", type = "character", help = "iCLIP bedgraph colours (space separated)"),
                     make_option(c("", "--groups"), action = "store", type = "character", help = "Grouping of iCLIP bedgraphs for separate plots (space separated)"),
-                    make_option(c("-p", "--peaks"), action = "store", type = "character", help = "BED file of peaks (space separated)"),
+                    make_option(c("-y", "--auxiliary"), action = "store", type = "character", help = "BED file(s) of auxiliary data (space separated)"),
+                    make_option(c("-z", "--auxiliary_labels"), action = "store", type = "character", help = "Labels for auxiliary data (comma separated in same order as files)"),
                     make_option(c("", "--coverage"), action = "store", type = "character", help = "bigwig coverage files (e.g. RNA-seq or Quantseq) - ensure same strand as region of interest (space separated)"),
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference GTF file (Gencode)"),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
@@ -28,6 +29,10 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("-a", "--annotation"), action = "store", type = "character", help = "Annotation options: original, gene, transcript, none [default %default]", default = "transcript"),
                     make_option(c("", "--size_x"), action = "store", type = "integer", help = "Plot size in mm (x) [default: %default]", default = 210),
                     make_option(c("", "--size_y"), action = "store", type = "integer", help = "Plot size in mm (y) [default: %default]", default = 297),
+                    make_option(c("", "--ratios"), action = "store", type = "character", help = "Specify plot ratios in order: xlink track, auxiliary tracks, coverage track, annotation track \
+                    (space separated). Put 0 if any of these track types are absent. \
+                    [default: 2 for xlinks, 0.25 for 1 auxiliary track 0.5 for >1, \
+                    2 for coverage, 3 for annotation]"),
                     make_option(c("-o", "--output"), action = "store", type = "character", help = "Output plot filename"))
 
 opt_parser = OptionParser(option_list = option_list)
@@ -67,6 +72,12 @@ if(is.null(opt$output)) {
 
 }
 
+if(file.exists(opt$output)) {
+
+ message("WARNING: ", opt$output, " exists and will be overwritten!")
+
+}
+
 # Check switches
 
 if(!opt$normalisation %in% c("none", "maxpeak", "libsize", "custom")) {
@@ -85,6 +96,17 @@ if(opt$normalisation == "custom") {
 
   }
   
+}
+
+if(!is.null(opt$ratios)) {
+  rts = unlist(strsplit(opt$ratios, " "))
+  if(!length(rts)==4){
+    message("ERROR: --ratios, please provide 4 values in order: xlink track, auxiliary tracks, \
+    coverage track, annotation track (space separated). If a track is absent \
+    put 0.")
+    quit(save = "no")
+  }
+
 }
 
 if(!opt$smoothing %in% c("none", "rollmean", "gaussian")) {
@@ -241,7 +263,8 @@ xlinks <- lapply(xlinks, function(x) SubsetBedgraph(gr = x, selected.region.gr =
 # Names of bedgraphs: If name is supplied use that, if not then generate a name from the file name
 if (!is.null(opt$label)) {
   
-  track_names <- strsplit(opt$label, " ")[[1]]
+  track_names <- strsplit(opt$label, ",")[[1]]
+
   
 } else {
   
@@ -287,8 +310,8 @@ if(opt$normalisation == "maxpeak") xlinks.dt[, smoothed := smoothed/(max(smoothe
 # Assign groups
 if(!is.null(opt$groups)) {
 
-  groups.dt <- data.table(sample = track_names, grp = strsplit(opt$group, " ")[[1]])
-  groups.dt$grp <- factor(groups.dt$grp, levels = unique(strsplit(opt$group, " ")[[1]]))
+  groups.dt <- data.table(sample = track_names, grp = strsplit(opt$group, ",")[[1]])
+  groups.dt$grp <- factor(groups.dt$grp, levels = unique(strsplit(opt$group, ",")[[1]]))
   xlinks.dt <- merge(xlinks.dt, groups.dt, by = "sample")
 
 }
@@ -341,11 +364,11 @@ if(!is.null(opt$groups)) {
 
   if(opt$scale_y == TRUE) {
 
-    p.iclip <- p.iclip + facet_grid(grp ~ ., scales = "free_y") + theme(strip.text.y = element_text(size = 10))
+    p.iclip <- p.iclip + facet_grid(grp ~ ., scales = "free_y", labeller = label_wrap_gen(20)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
 
   } else {
 
-    p.iclip <- p.iclip + facet_grid(grp ~ .) + theme(strip.text.y = element_text(size = 10))
+    p.iclip <- p.iclip + facet_grid(grp ~ ., labeller = label_wrap_gen(20)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
 
   }
 }
@@ -366,52 +389,50 @@ if(!is.null(opt$highlight)) {
 }
 
 # ==========
-# Part 1b - top half: peak annotation
+# Part 1b - top half: auxiliary file annotation (eg.peaks)
 # ==========
 
-# TODO: add in peak names as an option to supply
+if(!is.null(opt$auxiliary)) {
 
-if(!is.null(opt$peaks)) {
+  auxiliary.files <- strsplit(opt$auxiliary, " ")[[1]]
+  # Names of bedgraphs: If name is supplied use that, if not then generate a name from the file name
+  if (!is.null(opt$auxiliary_labels)) {
+  auxiliary.labels <- strsplit(opt$auxiliary_labels, ",")[[1]]
+  } else {
+  auxiliary.labels <- substr(gsub(".bed|.bed.gz", "", basename(auxiliary.files)), start = 1, stop = 10)
+  }
 
-  message("Plotting peaks")
-  peaks.files <- strsplit(opt$peaks, " ")[[1]]
-  peaks.grl <- lapply(peaks.files, function(x) {
-    
-    gr <- import.bed(x)
-    seqlevelsStyle(gr) <- "UCSC"
-    return(gr)
+  message("Plotting auxiliary track(s)")
+  auxiliary.grl <- lapply(auxiliary.files, import.bed)
+  auxiliary.grl <- lapply(auxiliary.grl, function(x) subsetByOverlaps(x, region.gr, ignore.strand = FALSE))
 
-  })
-  peaks.grl <- lapply(peaks.grl, function(x) subsetByOverlaps(x, region.gr, ignore.strand = FALSE))
+  auxiliary.dt <- rbindlist(lapply(auxiliary.grl, as.data.table))
+  auxiliary.dt$exp <- rep(auxiliary.labels, elementNROWS(auxiliary.grl))
+  auxiliary.dt$centre <- with(auxiliary.dt, start + width/2) # Replace this with data.table syntax, but need to check groups first
 
-  peaks.dt <- rbindlist(lapply(peaks.grl, as.data.table))
-  peaks.labels <- substr(gsub(".bed|.bed.gz", "", basename(peaks.files)), start = 1, stop = 10)
-  peaks.dt$exp <- rep(peaks.labels, elementNROWS(peaks.grl))
-  peaks.dt$centre <- with(peaks.dt, start + width/2) # Replace this with data.table syntax, but need to check groups first
+  if(nrow(auxiliary.dt) != 0) {
 
-  if(nrow(peaks.dt) != 0) {
+    if("itemRgb" %in% colnames(auxiliary.dt)) {
 
-    if("itemRgb" %in% colnames(peaks.dt)) {
-
-      peak.cols <- unique(peaks.dt$itemRgb)
-      names(peak.cols) <- peak.cols
+      auxiliary.cols <- unique(auxiliary.dt$itemRgb)
+      names(auxiliary.cols) <- auxiliary.cols
           
-      p.peaks <- ggplot(peaks.dt, aes(x = centre, width = width, y = exp, fill = itemRgb)) +
+      p.auxiliary <- ggplot(auxiliary.dt, aes(x = centre, width = width, y = exp, fill = itemRgb)) +
         geom_tile() +
-        scale_y_discrete(breaks = peaks.labels,
-                         limits = rev(sort(peaks.labels))) +
+        scale_y_discrete(breaks = auxiliary.labels,
+                         limits = rev(sort(auxiliary.labels))) +
         xlim(start(region.gr), end(region.gr)) +
-        scale_fill_manual(values = peak.cols) +
+        scale_fill_manual(values = auxiliary.cols) +
         labs(y = "",
              x = "") +
         theme_minimal_grid(line_size = 0.1) + theme(legend.position = "none")
       
     } else {
       
-      p.peaks <- ggplot(peaks.dt, aes(x = centre, width = width, y = exp)) +
+      p.auxiliary <- ggplot(auxiliary.dt, aes(x = centre, width = width, y = exp)) +
         geom_tile() +
-        scale_y_discrete(breaks = peaks.labels,
-                         limits = rev(sort(peaks.labels))) +
+        scale_y_discrete(breaks = auxiliary.labels,
+                         limits = rev(sort(auxiliary.labels))) +
         xlim(start(region.gr), end(region.gr)) +
         labs(y = "",
              x = "") +
@@ -442,7 +463,7 @@ if(!is.null(opt$coverage)) {
   })
 
   coverage.grl <- lapply(coverage.grl, function(x) SubsetBedgraph(gr = x, selected.region.gr = region.gr))
-  # coverage.grl <- lapply(peaks.grl, function(x) subsetByOverlaps(x, region.gr, ignore.strand = FALSE))
+  # coverage.grl <- lapply(auxiliary.grl, function(x) subsetByOverlaps(x, region.gr, ignore.strand = FALSE))
   coverage.dt <- rbindlist(lapply(coverage.grl, as.data.table))
   coverage.dt$exp <- rep(gsub(".bw|.bigwig|.bigWig", "", coverage.files), elementNROWS(coverage.grl))
   
@@ -452,8 +473,8 @@ if(!is.null(opt$coverage)) {
          y = "Coverage",
          colour = "") +
     scale_colour_tableau(palette = "Seattle Grays") +
-    facet_grid(exp ~ .) +
-    theme_minimal_grid(line_size = 0.1) + theme(legend.position = "none") + theme(strip.text.y = element_text(size = 10)) +
+    facet_grid(exp ~ ., labeller=label_wrap_gen(20)) +
+    theme_minimal_grid(line_size = 0.1) + theme(legend.position = "none") + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0)) +
     xlim(start(region.gr), end(region.gr))
 
 }
@@ -673,27 +694,46 @@ p.annot <- p.annot@ggplot
 # Part 3 - combine plots
 # ==========
 
-p <- p.iclip
-ratios <- 2
-if(exists("p.peaks")) {
-  p <- p / p.peaks
-  if(length(peaks.files) == 1) {
-    ratios <- c(ratios, 0.25)
-  } else {
-    ratios <- c(ratios, 0.5)
+if(is.null(opt$ratios)){ #if the user hasnt specified ratios
+  p <- p.iclip
+  ratios <- 2
+  if(exists("p.peaks")) {
+    p <- p / p.peaks
+    if(length(peaks.files) == 1) {
+      ratios <- c(ratios, 0.25)
+    } else {
+      ratios <- c(ratios, 0.5)
+    }
   }
-}
-if(exists("p.coverage")) {
-  p <- p / p.coverage
-  ratios <- c(ratios, 2)
-}
-if(exists("p.annot")) {
-  p <- p / p.annot
-  ratios <- c(ratios, 3)
-  # Could change this to ifelse depending on annotation style
+  if(exists("p.coverage")) {
+    p <- p / p.coverage
+    ratios <- c(ratios, 2)
+  }
+  if(exists("p.annot")) {
+    p <- p / p.annot
+    ratios <- c(ratios, 3)
+    # Could change this to ifelse depending on annotation style
+  }
+  p <- p + plot_layout(heights = ratios) 
+} else { #if the user has specified ratios
+  rts = unlist(strsplit(opt$ratios, " "))
+  p <- p.iclip
+  ratios <- rts[[1]]
+  if(exists("p.peaks")) {
+    p <- p / p.peaks
+    ratios <- c(ratios, rts[[2]])
+  }
+  if(exists("p.coverage")) {
+    p <- p / p.coverage
+    ratios <- c(ratios, rts[[3]])
+  }
+  if(exists("p.annot")) {
+    p <- p / p.annot
+    ratios <- c(ratios, rts[[4]])
+  }
+  p <- p + plot_layout(heights = ratios) 
 }
 
-p <- p + plot_layout(heights = ratios)
 ggsave(p, height = opt$size_y, width = opt$size_x, units = "mm", filename = opt$output)
 
 message("Completed")
