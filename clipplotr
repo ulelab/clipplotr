@@ -333,11 +333,11 @@ if(!is.null(opt$groups)) {
 
   if(opt$scale_y == TRUE) {
 
-    p.iclip <- p.iclip + facet_grid(grp ~ ., scales = "free_y", labeller=label_wrap_gen(20)) + theme(strip.text.y = element_text(size = 10, angle=0))
+    p.iclip <- p.iclip + facet_grid(grp ~ ., scales = "free_y", labeller=label_wrap_gen(20)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
 
   } else {
 
-    p.iclip <- p.iclip + facet_grid(grp ~ ., labeller=label_wrap_gen(20)) + theme(strip.text.y = element_text(size = 10, angle=0))
+    p.iclip <- p.iclip + facet_grid(grp ~ ., labeller=label_wrap_gen(20)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
 
   }
 }
