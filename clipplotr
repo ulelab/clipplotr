@@ -333,11 +333,11 @@ if(!is.null(opt$groups)) {
 
   if(opt$scale_y == TRUE) {
 
-    p.iclip <- p.iclip + facet_grid(grp ~ ., scales = "free_y", labeller=label_wrap_gen(20)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
+    p.iclip <- p.iclip + facet_grid(grp ~ ., scales = "free_y", labeller = label_wrap_gen(20)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
 
   } else {
 
-    p.iclip <- p.iclip + facet_grid(grp ~ ., labeller=label_wrap_gen(20)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
+    p.iclip <- p.iclip + facet_grid(grp ~ ., labeller = label_wrap_gen(20)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
 
   }
 }
@@ -434,7 +434,7 @@ if(!is.null(opt$coverage)) {
          colour = "") +
     scale_colour_tableau(palette = "Seattle Grays") +
     facet_grid(exp ~ ., labeller=label_wrap_gen(20)) +
-    theme_minimal_grid(line_size = 0.1) + theme(legend.position = "none") + theme(strip.text.y = element_text(size = 10, angle=0)) +
+    theme_minimal_grid(line_size = 0.1) + theme(legend.position = "none") + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0)) +
     xlim(start(region.gr), end(region.gr))
 
 }
