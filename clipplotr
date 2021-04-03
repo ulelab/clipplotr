@@ -68,6 +68,12 @@ if(is.null(opt$output)) {
 
 }
 
+if(file.exists(opt$output)) {
+
+ message("WARNING: ", opt$output, " exists and will be overwritten!")
+
+}
+
 # Check switches
 
 if(!opt$normalisation %in% c("none", "maxpeak", "libsize", "custom")) {
