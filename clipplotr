@@ -11,18 +11,18 @@
 
 suppressPackageStartupMessages(library(optparse))
 
-option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "character", help = "Input iCLIP bedgraphs (space separated)"),
+option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "character", help = "Input iCLIP bedgraphs (comma separated)"),
                     make_option(c("-l", "--labels"), action = "store", type = "character", help = "Unique iCLIP bedgraph labels (comma separated in same order as files)"),
-                    make_option(c("-c", "--colours"), action = "store", type = "character", help = "iCLIP bedgraph colours (space separated)"),
-                    make_option(c("", "--groups"), action = "store", type = "character", help = "Grouping of iCLIP bedgraphs for separate plots (space separated)"),
-                    make_option(c("-y", "--auxiliary"), action = "store", type = "character", help = "BED file(s) of auxiliary data (space separated)"),
-                    make_option(c("-z", "--auxiliary_labels"), action = "store", type = "character", help = "Labels for auxiliary data (comma separated in same order as files)"),
-                    make_option(c("", "--coverage"), action = "store", type = "character", help = "bigwig coverage files (e.g. RNA-seq or Quantseq) - ensure same strand as region of interest (space separated)"),
+                    make_option(c("-c", "--colours"), action = "store", type = "character", help = "iCLIP bedgraph colours (comma separated)"),
+                    make_option(c("", "--groups"), action = "store", type = "character", help = "Grouping of iCLIP bedgraphs for separate plots (comma separated)"),
+                    make_option(c("-y", "--auxiliary"), action = "store", type = "character", help = "BED file(s) of auxiliary data (comma separated)"),
+                    make_option(c("", "--auxiliary_labels"), action = "store", type = "character", help = "Labels for auxiliary data (comma separated in same order as files)"),
+                    make_option(c("", "--coverage"), action = "store", type = "character", help = "bigwig coverage files (e.g. RNA-seq or Quantseq) - ensure same strand as region of interest (comma separated)"),
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference GTF file (Gencode)"),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
                     make_option(c("", "--highlight"), action = "store", type = "character", help = "Region to highlight as 35754106:35856276"),                    
                     make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize, custom [default %default]", default = "libsize"),
-                    make_option(c("", "--size_factors"), action = "store", type = "character", help = "Size factors for custom normalisation (space separated)"),
+                    make_option(c("", "--size_factors"), action = "store", type = "character", help = "Size factors for custom normalisation (comma separated)"),
                     make_option(c("", "--scale_y"), action = "store_true", type = "logical", help = "Scale facetted CLIP y-axis", default = FALSE),
                     make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, gaussian [default %default]", default = "rollmean"),
                     make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window [default %default]", default = 100),
@@ -30,7 +30,7 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("", "--size_x"), action = "store", type = "integer", help = "Plot size in mm (x) [default: %default]", default = 210),
                     make_option(c("", "--size_y"), action = "store", type = "integer", help = "Plot size in mm (y) [default: %default]", default = 297),
                     make_option(c("", "--ratios"), action = "store", type = "character", help = "Specify plot ratios in order: xlink track, auxiliary tracks, coverage track, annotation track \
-                    (space separated). Put 0 if any of these track types are absent. \
+                    (comma separated). Put 0 if any of these track types are absent. \
                     [default: 2 for xlinks, 0.25 for 1 auxiliary track 0.5 for >1, \
                     2 for coverage, 3 for annotation]"),
                     make_option(c("-o", "--output"), action = "store", type = "character", help = "Output plot filename"))
@@ -99,8 +99,8 @@ if(opt$normalisation == "custom") {
 }
 
 if(!is.null(opt$ratios)) {
-  rts = unlist(strsplit(opt$ratios, " "))
-  if(!length(rts)==4){
+  rts = unlist(strsplit(opt$ratios, ","))
+  if(length(rts) != 4){
     message("ERROR: --ratios, please provide 4 values in order: xlink track, auxiliary tracks, \
     coverage track, annotation track (space separated). If a track is absent \
     put 0.")
@@ -216,7 +216,7 @@ seqlevels(region.gr) <- as.character(unique(seqnames(region.gr))) # Cut down to 
 
 # Read in xlinks
 message("Loading bedgraphs")
-xlink.files <- strsplit(opt$xlinks, " ")[[1]]
+xlink.files <- strsplit(opt$xlinks, ",")[[1]]
 
 if(all(grepl("bedgraph$|bedgraph.gz$", xlink.files))) {
 
@@ -254,7 +254,7 @@ if(opt$normalisation %in% c("libsize", "maxpeak", "none")) {
     
   }
   
-  libSizes <- as.numeric(strsplit(opt$size_factors, " ")[[1]])
+  libSizes <- as.numeric(strsplit(opt$size_factors, ",")[[1]])
   
 }
 # Subset for region and add in 0 count position
@@ -268,8 +268,7 @@ if (!is.null(opt$label)) {
   
 } else {
   
-  # track_names <- lapply(strsplit(opt$xlinks, " ")[[1]], function(x) gsub(".bedgraph", "", basename(x)))
-  track_names <- lapply(strsplit(opt$xlinks, " ")[[1]], function(x) substr(basename(x), start = 1, stop = 10))
+  track_names <- lapply(strsplit(opt$xlinks, ",")[[1]], function(x) substr(basename(x), start = 1, stop = 10))
   
 }
 
@@ -338,7 +337,7 @@ p.iclip <- ggplot(xlinks.dt) +
 
   } else {
 
-    cols <- strsplit(opt$colours, " ")[[1]]
+    cols <- strsplit(opt$colours, ",")[[1]]
     names(cols) <- track_names
 
     p.iclip <- ggplot(xlinks.dt) +
@@ -373,10 +372,6 @@ if(!is.null(opt$groups)) {
 # Add highlight
 if(!is.null(opt$highlight)) {
 
-  # highlight.dt <- data.table(x1 = as.integer(strsplit(opt$highlight, ":")[[1]][1]),
-  #                            x2 = as.integer(strsplit(opt$highlight, ":")[[1]][2]),
-  #                            y1 = 0,
-  #                            y2 = max(ggplot_build(p.iclip)$layout$panel_scales_y[[1]]$range$range)) # Assumes not facetted with free scales
   highlight.dt <- data.table(x1 = as.integer(strsplit(opt$highlight, ":")[[1]][1]),
                              x2 = as.integer(strsplit(opt$highlight, ":")[[1]][2]),
                              y1 = 0,
@@ -391,7 +386,7 @@ if(!is.null(opt$highlight)) {
 
 if(!is.null(opt$auxiliary)) {
 
-  auxiliary.files <- strsplit(opt$auxiliary, " ")[[1]]
+  auxiliary.files <- strsplit(opt$auxiliary, ",")[[1]]
 
   # Names of bedgraphs: If name is supplied use that, if not then generate a name from the file name
   if (!is.null(opt$auxiliary_labels)) {
@@ -460,7 +455,7 @@ if(!is.null(opt$auxiliary)) {
 if(!is.null(opt$coverage)) {
   
   message("Plotting coverage")
-  coverage.files <- strsplit(opt$coverage, " ")[[1]]
+  coverage.files <- strsplit(opt$coverage, ",")[[1]]
   # coverage.grl <- lapply(coverage.files, import.bw, selection = region.gr) # addition selection speeds up loading
   coverage.grl <- lapply(coverage.files, function(x) {
 
@@ -725,7 +720,7 @@ if(is.null(opt$ratios)){ #if the user hasnt specified ratios
   }
   p <- p + plot_layout(heights = ratios) 
 } else { #if the user has specified ratios
-  rts = unlist(strsplit(opt$ratios, " "))
+  # rts = unlist(strsplit(opt$ratios, ",")) # This is already defined at the beginning
   p <- p.iclip
   ratios <- rts[[1]]
   if(exists("p.peaks")) {
