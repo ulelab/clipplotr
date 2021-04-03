@@ -9,16 +9,16 @@ channels:
   - defaults
 
 dependencies:
-  - conda-forge::r-base
-  - conda-forge::r-optparse
-  - conda-forge::r-ggplot2
-  - conda-forge::r-scales
-  - conda-forge::r-ggthemes
-  - conda-forge::r-cowplot
-  - conda-forge::r-patchwork
-  - conda-forge::r-smoother
-  - conda-forge::r-zoo
-  - conda-forge::r-data.table
+  - conda-forge::r-base=4.0.3
+  - conda-forge::r-optparse=1.6.6
+  - conda-forge::r-ggplot2=3.3.3
+  - conda-forge::r-scales=1.1.1
+  - conda-forge::r-ggthemes=4.2.4
+  - conda-forge::r-cowplot=1.1.1
+  - conda-forge::r-patchwork=1.1.1
+  - conda-forge::r-smoother=1.1
+  - conda-forge::r-zoo=1.8
+  - conda-forge::r-data.table=1.14.0
 
-  - bioconda::bioconductor-rtracklayer
-  - bioconda::bioconductor-genomicfeatures
+  - bioconda::bioconductor-rtracklayer=1.50.0
+  - bioconda::bioconductor-genomicfeatures=1.42.2
