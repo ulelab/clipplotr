@@ -74,7 +74,7 @@ if(is.null(opt$output)) {
 
 if(file.exists(opt$output)) {
 
- message("WARNING: ", opt$output, " exists and will be overwritten!")
+ message("WARNING: Output file '", opt$output, "' exists and will be overwritten!")
 
 }
 
@@ -168,7 +168,7 @@ SubsetBedgraph <- function(gr, selected.region.gr) {
 # ==========
 
 # Create rosetta and TxDb
-message("Reading in annotation from GTF")
+message("INFO: Loading annotation GTF")
 
 gtf <- rtracklayer::import.gff2(opt$gtf)
 seqlevelsStyle(gtf) <- "UCSC"
@@ -177,13 +177,13 @@ genes.gr <- gtf[gtf$type == "gene"]
 # Create TxDb if doesn't already exist
 if(file.exists(gsub(".gtf.gz|.gtf", ".sqlite", opt$gtf))) {
 
-  message("Loading pre-existing annotation database")    
+  message("INFO: ...loading pre-existing annotation database")    
   TxDb <- loadDb(gsub(".gtf.gz|.gtf", ".sqlite", opt$gtf))
   seqlevelsStyle(TxDb) <- "UCSC"
   
 } else {
 
-  message("Creating annotation database for future runs")
+  message("INFO: ...creating annotation database for future runs")
   TxDb <- suppressMessages(makeTxDbFromGFF(opt$gtf))
   seqlevelsStyle(TxDb) <- "UCSC"
   saveDb(TxDb, gsub(".gtf.gz|.gtf", ".sqlite", opt$gtf))
@@ -215,7 +215,7 @@ seqlevels(region.gr) <- as.character(unique(seqnames(region.gr))) # Cut down to 
 # ==========
 
 # Read in xlinks
-message("Loading bedgraphs")
+message("INFO: Plotting crosslink track(s)")
 xlink.files <- strsplit(opt$xlinks, ",")[[1]]
 
 if(all(grepl("bedgraph$|bedgraph.gz$", xlink.files))) {
@@ -234,7 +234,7 @@ if(all(grepl("bedgraph$|bedgraph.gz$", xlink.files))) {
 
 } else {
 
-  stop("Crosslink files need to be in iCount bedgraph or bed format.")
+  stop("ERROR: Crosslink files need to be in iCount bedgraph or bed format.")
   quit(save = "no")
 
 }
@@ -243,7 +243,6 @@ if(all(grepl("bedgraph$|bedgraph.gz$", xlink.files))) {
 if(opt$normalisation %in% c("libsize", "maxpeak", "none")) {
   
   libSizes <- lapply(xlinks, function(x) { sum(abs(x$score)) })
-  # libSizes <- lapply(xlink.files, function(x) sum(abs(fread(x, select = 5)$V5))) # Not sure yet if this is faster?
 
 } else if(opt$normalisation == "custom") {
   
@@ -265,7 +264,6 @@ if (!is.null(opt$label)) {
   
   track_names <- strsplit(opt$label, ",")[[1]]
 
-  
 } else {
   
   track_names <- lapply(strsplit(opt$xlinks, ",")[[1]], function(x) substr(basename(x), start = 1, stop = 10))
@@ -285,7 +283,7 @@ xlinks.dt <- rbindlist(xlinks.dt)
 setkey(xlinks.dt, sample)
 
 # Do the normalisation
-message("Normalising")
+message("INFO: ...normalising")
 xlinks.dt[, norm := switch(opt$normalisation, 
                            "libsize" = (score * 1e6)/libSize,
                           #  "maxpeak" = score/max(score),
@@ -296,7 +294,7 @@ xlinks.dt[, norm := switch(opt$normalisation,
           by = sample]
 
 # Do the smoothing
-message("Smoothing")
+message("INFO: ...smoothing")
 xlinks.dt[, smoothed := switch(opt$smoothing, 
                                "gaussian" = smth.gaussian(norm, window = opt$smoothing_window),
                                "rollmean" = rollmean(norm, opt$smoothing_window, fill = 0),
@@ -328,12 +326,11 @@ p.iclip <- ggplot(xlinks.dt) +
   geom_line(aes(x = start, y = smoothed, group = sample, color = sample)) +
   labs(title = opt$region,
        x = "",
-      #  y = "Crosslink signal",
-      y = y.label,
+       y = y.label,
        colour = "") +
   scale_colour_tableau(palette = "Tableau 10") +
   theme_minimal_grid(line_size = 0.1) + theme(legend.position = "top") +
-      xlim(start(region.gr),end(region.gr))
+  xlim(start(region.gr),end(region.gr))
 
   } else {
 
@@ -344,8 +341,7 @@ p.iclip <- ggplot(xlinks.dt) +
       geom_line(aes(x = start, y = smoothed, group = sample, color = sample)) +
       labs(title = opt$region,
            x = "",
-          #  y = "Crosslink signal",
-          y = y.label,
+           y = y.label,
            colour = "") +
       scale_colour_manual(values = cols) +
       theme_minimal_grid(line_size = 0.1) + theme(legend.position = "top") +
@@ -386,6 +382,8 @@ if(!is.null(opt$highlight)) {
 
 if(!is.null(opt$auxiliary)) {
 
+  message("INFO: Plotting auxiliary track(s)")
+
   auxiliary.files <- strsplit(opt$auxiliary, ",")[[1]]
 
   # Names of bedgraphs: If name is supplied use that, if not then generate a name from the file name
@@ -399,7 +397,7 @@ if(!is.null(opt$auxiliary)) {
   
   }
 
-  message("Plotting auxiliary track(s)")
+
   auxiliary.grl <- lapply(auxiliary.files, function(x) {
     
     auxiliary.gr <- import.bed(x)
@@ -454,7 +452,7 @@ if(!is.null(opt$auxiliary)) {
 
 if(!is.null(opt$coverage)) {
   
-  message("Plotting coverage")
+  message("INFO: Plotting coverage track(s)")
   coverage.files <- strsplit(opt$coverage, ",")[[1]]
   # coverage.grl <- lapply(coverage.files, import.bw, selection = region.gr) # addition selection speeds up loading
   coverage.grl <- lapply(coverage.files, function(x) {
@@ -487,7 +485,7 @@ if(!is.null(opt$coverage)) {
 # Part 2 - bottom half: gene structures
 # ==========
 
-message("Creating annotation track")
+message("INFO: Plotting annotation tracks")
 
 rosetta.dt <- as.data.table(mcols(genes.gr))[, .(gene_id, gene_name)]
 setkey(rosetta.dt, gene_id)
