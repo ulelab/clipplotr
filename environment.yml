@@ -1,0 +1,24 @@
+# You can use this file to create a conda environment for clipplotr:
+# conda env create -f environment.yml
+
+name: clipplotr
+
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - conda-forge::r-base
+  - conda-forge::r-optparse
+  - conda-forge::r-ggplot2
+  - conda-forge::r-scales
+  - conda-forge::r-ggthemes
+  - conda-forge::r-cowplot
+  - conda-forge::r-patchwork
+  - conda-forge::r-smoother
+  - conda-forge::r-zoo
+  - conda-forge::r-data.table
+
+  - bioconda::bioconductor-rtracklayer
+  - bioconda::bioconductor-genomicfeatures
