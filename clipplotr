@@ -301,9 +301,6 @@ xlinks.dt[, smoothed := switch(opt$smoothing,
                                "none" = norm), 
           by = sample]
 
-# Now normalise to max peak after smoothing
-if(opt$normalisation == "maxpeak") xlinks.dt[, smoothed := smoothed/(max(smoothed)), by = sample]
-
 # Assign groups
 if(!is.null(opt$groups)) {
 
@@ -312,6 +309,10 @@ if(!is.null(opt$groups)) {
   xlinks.dt <- merge(xlinks.dt, groups.dt, by = "sample")
 
 }
+
+# Now normalise to max peak after smoothing
+if(opt$normalisation == "maxpeak" & is.null(opt$groups)) xlinks.dt[, smoothed := smoothed/(max(smoothed)), by = sample]
+if(opt$normalisation == "maxpeak" & !is.null(opt$groups)) xlinks.dt[, smoothed := smoothed/(max(smoothed)), by = grp]
 
 y.label <- switch(opt$normalisation, 
                   "libsize" = "Crosslink signal\n(counts per million)",
