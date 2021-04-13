@@ -699,9 +699,9 @@ p.annot <- p.annot@ggplot
 if(is.null(opt$ratios)){ #if the user hasnt specified ratios
   p <- p.iclip
   ratios <- 2
-  if(exists("p.peaks")) {
-    p <- p / p.peaks
-    if(length(peaks.files) == 1) {
+  if(exists("p.auxiliary")) {
+    p <- p / p.auxiliary
+    if(length(auxiliary.files) == 1) {
       ratios <- c(ratios, 0.25)
     } else {
       ratios <- c(ratios, 0.5)
@@ -721,8 +721,8 @@ if(is.null(opt$ratios)){ #if the user hasnt specified ratios
   # rts = unlist(strsplit(opt$ratios, ",")) # This is already defined at the beginning
   p <- p.iclip
   ratios <- rts[[1]]
-  if(exists("p.peaks")) {
-    p <- p / p.peaks
+  if(exists("p.auxiliary")) {
+    p <- p / p.auxiliary
     ratios <- c(ratios, rts[[2]])
   }
   if(exists("p.coverage")) {
