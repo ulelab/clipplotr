@@ -80,7 +80,7 @@ if(file.exists(opt$output)) {
 
 # Check switches
 
-if(!opt$normalisation %in% c("none", "maxpeak", "libsize", "custom")) {
+if(!opt$normalisation %in% c("none", "maxpeak", "libsize", "custom", "custom_maxpeak", "libsize_maxpeak")) {
   
   message("ERROR: normalisation needs to be one of none, maxpeak, libsize, custom, libsize_maxpeak or custom_maxpeak")
   quit(save = "no")
@@ -318,11 +318,11 @@ if(grepl("maxpeak",opt$normalisation) & !is.null(opt$groups)) xlinks.dt[, smooth
 
 y.label <- switch(opt$normalisation, 
                   "libsize" = "Crosslink signal\n(counts per million)",
-                  "libsize_maxpeak" = "Crosslink signal\n(counts per million normalised to max peak)",
+                  "libsize_maxpeak" = "Crosslink signal\n(counts per million\nnormalised to max peak)",
                   "maxpeak" = "Crosslink signal\n(normalised to max peak)",
                   "none" = "Raw crosslink signal",
                   "custom" = "Crosslink signal\n(custom normalisation)",
-                  "custom_maxpeak" = "Crosslink signal\n(custom normalisation adjusted to max peak)")
+                  "custom_maxpeak" = "Crosslink signal\n(custom normalisation\nadjusted to max peak)")
 
 # Plot top half
 if(is.null(opt$colours)) {
@@ -361,11 +361,11 @@ if(!is.null(opt$groups)) {
 
   if(opt$scale_y == TRUE) {
 
-    p.iclip <- p.iclip + facet_grid(grp ~ ., scales = "free_y", labeller = label_wrap_gen(20)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
+    p.iclip <- p.iclip + facet_grid(grp ~ ., scales = "free_y", labeller = label_wrap_gen(10)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
 
   } else {
 
-    p.iclip <- p.iclip + facet_grid(grp ~ ., labeller = label_wrap_gen(20)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
+    p.iclip <- p.iclip + facet_grid(grp ~ ., labeller = label_wrap_gen(10)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
 
   }
 }
@@ -480,7 +480,7 @@ if(!is.null(opt$coverage)) {
          y = "Coverage",
          colour = "") +
     scale_colour_tableau(palette = "Seattle Grays") +
-    facet_grid(exp ~ ., labeller=label_wrap_gen(20)) +
+    facet_grid(exp ~ ., labeller=label_wrap_gen(10)) +
     theme_minimal_grid(line_size = 0.1) + theme(legend.position = "none") + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0)) +
     xlim(start(region.gr), end(region.gr))
 
