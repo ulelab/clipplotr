@@ -21,7 +21,7 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference GTF file (Gencode)"),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
                     make_option(c("", "--highlight"), action = "store", type = "character", help = "Region to highlight as 35754106:35856276"),                    
-                    make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize, custom [default %default]", default = "libsize"),
+                    make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize, custom, libsize_maxpeak, custom_maxpeak [default %default]", default = "libsize"),
                     make_option(c("", "--size_factors"), action = "store", type = "character", help = "Size factors for custom normalisation (comma separated)"),
                     make_option(c("", "--scale_y"), action = "store_true", type = "logical", help = "Scale facetted CLIP y-axis", default = FALSE),
                     make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, gaussian [default %default]", default = "rollmean"),
@@ -82,16 +82,16 @@ if(file.exists(opt$output)) {
 
 if(!opt$normalisation %in% c("none", "maxpeak", "libsize", "custom")) {
   
-  message("ERROR: normalisation needs to be one of none, maxpeak, libsize, or custom")
+  message("ERROR: normalisation needs to be one of none, maxpeak, libsize, custom, libsize_maxpeak or custom_maxpeak")
   quit(save = "no")
   
 }
 
-if(opt$normalisation == "custom") {
+if(opt$normalisation == "custom" | opt$normalisation == "custom_maxpeak") {
   
   if(is.null(opt$size_factors)) {
   
-  message("ERROR: for custom normalisation size factors need to be provided")
+  message("ERROR: for custom or custom_maxpeak normalisation size factors need to be provided")
   quit(save = "no")
 
   }
@@ -111,7 +111,7 @@ if(!is.null(opt$ratios)) {
 
 if(!opt$smoothing %in% c("none", "rollmean", "gaussian")) {
   
-  message("ERROR: normalisation needs to be one of none, rollmean, or gaussian")
+  message("ERROR: smoothing needs to be one of none, rollmean, or gaussian")
   quit(save = "no")
   
 }
@@ -240,11 +240,11 @@ if(all(grepl("bedgraph$|bedgraph.gz$", xlink.files))) {
 }
 
 # Actually only need to do this if normalisation strategy is libSize
-if(opt$normalisation %in% c("libsize", "maxpeak", "none")) {
+if(opt$normalisation %in% c("libsize", "maxpeak", "libsize_maxpeak", "custom_maxpeak", "none")) {
   
   libSizes <- lapply(xlinks, function(x) { sum(abs(x$score)) })
 
-} else if(opt$normalisation == "custom") {
+} else if(opt$normalisation == "custom" | opt$normalisation == "custom_maxpeak") {
   
   if(is.null(opt$size_factors)) {
     
@@ -286,11 +286,13 @@ setkey(xlinks.dt, sample)
 message("INFO: ...normalising")
 xlinks.dt[, norm := switch(opt$normalisation, 
                            "libsize" = (score * 1e6)/libSize,
+                           "libsize_maxpeak" = (score * 1e6)/libSize,
                           #  "maxpeak" = score/max(score),
                           #  "maxpeak" = (score * 1e6)/libSize,
                            "maxpeak" = score,
                            "none" = score,
-                           "custom" = score/libSize), 
+                           "custom" = score/libSize,
+                           "custom_maxpeak" = score/libSize), 
           by = sample]
 
 # Do the smoothing
@@ -311,14 +313,16 @@ if(!is.null(opt$groups)) {
 }
 
 # Now normalise to max peak after smoothing
-if(opt$normalisation == "maxpeak" & is.null(opt$groups)) xlinks.dt[, smoothed := smoothed/(max(smoothed)), by = sample]
-if(opt$normalisation == "maxpeak" & !is.null(opt$groups)) xlinks.dt[, smoothed := smoothed/(max(smoothed)), by = grp]
+if(grepl("maxpeak",opt$normalisation) & is.null(opt$groups)) xlinks.dt[, smoothed := smoothed/(max(smoothed)), by = sample]
+if(grepl("maxpeak",opt$normalisation) & !is.null(opt$groups)) xlinks.dt[, smoothed := smoothed/(max(smoothed)), by = grp]
 
 y.label <- switch(opt$normalisation, 
                   "libsize" = "Crosslink signal\n(counts per million)",
+                  "libsize_maxpeak" = "Crosslink signal\n(counts per million normalised to max peak)",
                   "maxpeak" = "Crosslink signal\n(normalised to max peak)",
                   "none" = "Raw crosslink signal",
-                  "custom" = "Crosslink signal\n(custom normalisation)")
+                  "custom" = "Crosslink signal\n(custom normalisation)",
+                  "custom_maxpeak" = "Crosslink signal\n(custom normalisation adjusted to max peak)")
 
 # Plot top half
 if(is.null(opt$colours)) {
