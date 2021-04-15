@@ -18,6 +18,7 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("-y", "--auxiliary"), action = "store", type = "character", help = "BED file(s) of auxiliary data (comma separated)"),
                     make_option(c("", "--auxiliary_labels"), action = "store", type = "character", help = "Labels for auxiliary data (comma separated in same order as files)"),
                     make_option(c("", "--coverage"), action = "store", type = "character", help = "bigwig coverage files (e.g. RNA-seq or Quantseq) - ensure same strand as region of interest (comma separated)"),
+                    make_option(c("", "--coverage_labels"), action = "store", type = "character", help = "Labels for coverage data (comma separated in same order as files)"),
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference GTF file (Gencode)"),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
                     make_option(c("", "--highlight"), action = "store", type = "character", help = "Region to highlight as 35754106:35856276"),                    
@@ -472,7 +473,19 @@ if(!is.null(opt$coverage)) {
   coverage.grl <- lapply(coverage.grl, function(x) SubsetBedgraph(gr = x, selected.region.gr = region.gr))
   # coverage.grl <- lapply(auxiliary.grl, function(x) subsetByOverlaps(x, region.gr, ignore.strand = FALSE))
   coverage.dt <- rbindlist(lapply(coverage.grl, as.data.table))
-  coverage.dt$exp <- rep(gsub(".bw|.bigwig|.bigWig", "", coverage.files), elementNROWS(coverage.grl))
+
+    # Names of coverage tracks
+  if (!is.null(opt$coverage_labels)) {
+  
+    coverage.dt$exp <-  rep(strsplit(opt$coverage_labels, ",")[[1]], elementNROWS(coverage.grl))
+    coverage.dt$exp <- factor(coverage.dt$exp, levels=strsplit(opt$coverage_labels, ",")[[1]])
+  
+  } else {
+  
+    coverage.dt$exp <- rep(gsub(".bw|.bigwig|.bigWig", "", coverage.files), elementNROWS(coverage.grl))
+    coverage.dt$exp <- factor(coverage.dt$exp, levels=gsub(".bw|.bigwig|.bigWig", "", coverage.files))
+  
+  }
   
   p.coverage <- ggplot(coverage.dt, aes(x = start, y = score, col = exp)) +
     geom_line() +
