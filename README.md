@@ -91,7 +91,7 @@ Where multiple files are specified for a parameter, these should be comma-separa
 * `-n` or `--normalisation` can be used to specify how the CLIP tracks should be normalised:
 
     1. `libsize` - by experiment library size and scaled to crosslinks per million (default).
-    2. `maxpeak` - by the maximum peak (after smoothing) within the region of interest for the experiment.
+    2. `maxpeak` - by the maximum peak (after smoothing) within the region of interest for the experiment. If multiple CLIP tracks are plotted, the maxmimum position in the group is taken.
     3. `none` - no normalisation, just plot raw crosslink counts.
     4. `custom` - by dividing counts with the provided size factors.
 
