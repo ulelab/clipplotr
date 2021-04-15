@@ -41,7 +41,7 @@ chmod +x clipplotr
 
 The minimum parameters required are:
 
-1. A space-separated list of CLIP tracks in either iCount BEDGRAPH or BED formats
+1. A comma-separated list of CLIP tracks in either iCount BEDGRAPH or BED formats
 2. The annotation GTF file
 3. The region of interest
 4. An output filename for the plot
@@ -52,7 +52,7 @@ This can be run with a command such as:
 
 ```
 ./clipplotr \
---xlinks 'clip1.bedgraph clip2.bedgraph' \
+--xlinks 'clip1.bedgraph,clip2.bedgraph' \
 --gtf genome.gtf \
 --region 'chr1:1000:2000:+' \
 --output plot.pdf
@@ -69,14 +69,14 @@ To get all the parameters with explanations, run:
 There is a lot of customisation that can be done to make the desired plot. These are divided into:
 
 1. CLIP plot
-2. Peak plot (optional)
+2. Auxiliary plot (ie. any annotation in bed format, for example peaks; optional)
 3. Coverage plot (optional)
 4. Annotation plot (optional)
 5. General
 
 All plots are strand aware and only plot signal or features on the same strand as the region of interest. Additional optional plots are added dynamically to the CLIP plot.
 
-Where multiple files are specified for a parameter, these should be space-separated and in `' '`. BED, BEDGRAPH and GTF files can be gzip compressed.
+Where multiple files are specified for a parameter, these should be comma-separated and in quotation marks `' '`. BED, BEDGRAPH and GTF files can be gzip compressed.
 
 ### 1. CLIP plot
 
@@ -109,9 +109,9 @@ Where multiple files are specified for a parameter, these should be space-separa
 
 * `--highlight` can be used to specify a region in the format `'start_coordinate:end_coordinate'`. This will be highlighted by grey shading. 
 
-### 2. Peak plot
+### 2. Auxiliary plot
 
-* `-p` or `--peaks` can be used to supply the peak tracks. These should be in a standard 6-column BED format. Optionally, if a 9-column BED file is supplied then the 9th column `itemRgb` will be used to colour the peaks. These tracks do not necessarily need to be peak intervals, but could be any features of interest. The names are the first 10 characters of the filename.
+* `-y` or `--auxiliary` can be used to supply the auxiliary tracks. These should be in a standard 6-column BED format. Optionally, if a 9-column BED file is supplied then the 9th column `itemRgb` will be used to colour the intervals. These tracks could be peak intervals, but could be any features of interest. You can label the tracks with `--auxiliary_labels`, otherwise the first 10 characters of the filename are used.
 
 ### 3. Coverage plot
 
@@ -141,6 +141,8 @@ Where multiple files are specified for a parameter, these should be space-separa
 * `--size_y` can be used to specify the height of the final plot in mm (default: 297 A4)
 
 * `-o` or `--output` should be used to specify the output filename. The extension (e.g. `.pdf` or `.png`) will determine the output file type.
+
+* `--ratios` allows you to specify the relative sizing of the combined plots. Specify plot ratios in order: xlink track, auxiliary tracks, coverage track, annotation track (comma separated). Put 0 if any of these track types are absent. (default: 2 for xlinks, 0.25 for 1 auxiliary track 0.5 for >1, 2 for coverage, 3 for annotation)
 
 ## Example
 
