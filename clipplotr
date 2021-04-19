@@ -241,7 +241,7 @@ if(all(grepl("bedgraph$|bedgraph.gz$", xlink.files))) {
 }
 
 # Actually only need to do this if normalisation strategy is libSize
-if(opt$normalisation %in% c("libsize", "maxpeak", "libsize_maxpeak", "custom_maxpeak", "none")) {
+if(opt$normalisation %in% c("libsize", "maxpeak", "libsize_maxpeak", "none")) {
   
   libSizes <- lapply(xlinks, function(x) { sum(abs(x$score)) })
 
