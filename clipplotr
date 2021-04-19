@@ -18,10 +18,11 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("-y", "--auxiliary"), action = "store", type = "character", help = "BED file(s) of auxiliary data (comma separated)"),
                     make_option(c("", "--auxiliary_labels"), action = "store", type = "character", help = "Labels for auxiliary data (comma separated in same order as files)"),
                     make_option(c("", "--coverage"), action = "store", type = "character", help = "bigwig coverage files (e.g. RNA-seq or Quantseq) - ensure same strand as region of interest (comma separated)"),
+                    make_option(c("", "--coverage_labels"), action = "store", type = "character", help = "Labels for coverage data (comma separated in same order as files)"),
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference GTF file (Gencode)"),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
                     make_option(c("", "--highlight"), action = "store", type = "character", help = "Region to highlight as 35754106:35856276"),                    
-                    make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize, custom [default %default]", default = "libsize"),
+                    make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize, custom, libsize_maxpeak, custom_maxpeak [default %default]", default = "libsize"),
                     make_option(c("", "--size_factors"), action = "store", type = "character", help = "Size factors for custom normalisation (comma separated)"),
                     make_option(c("", "--scale_y"), action = "store_true", type = "logical", help = "Scale facetted CLIP y-axis", default = FALSE),
                     make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, gaussian [default %default]", default = "rollmean"),
@@ -80,18 +81,18 @@ if(file.exists(opt$output)) {
 
 # Check switches
 
-if(!opt$normalisation %in% c("none", "maxpeak", "libsize", "custom")) {
+if(!opt$normalisation %in% c("none", "maxpeak", "libsize", "custom", "custom_maxpeak", "libsize_maxpeak")) {
   
-  message("ERROR: normalisation needs to be one of none, maxpeak, libsize, or custom")
+  message("ERROR: normalisation needs to be one of none, maxpeak, libsize, custom, libsize_maxpeak or custom_maxpeak")
   quit(save = "no")
   
 }
 
-if(opt$normalisation == "custom") {
+if(opt$normalisation == "custom" | opt$normalisation == "custom_maxpeak") {
   
   if(is.null(opt$size_factors)) {
   
-  message("ERROR: for custom normalisation size factors need to be provided")
+  message("ERROR: for custom or custom_maxpeak normalisation size factors need to be provided")
   quit(save = "no")
 
   }
@@ -111,7 +112,7 @@ if(!is.null(opt$ratios)) {
 
 if(!opt$smoothing %in% c("none", "rollmean", "gaussian")) {
   
-  message("ERROR: normalisation needs to be one of none, rollmean, or gaussian")
+  message("ERROR: smoothing needs to be one of none, rollmean, or gaussian")
   quit(save = "no")
   
 }
@@ -240,11 +241,11 @@ if(all(grepl("bedgraph$|bedgraph.gz$", xlink.files))) {
 }
 
 # Actually only need to do this if normalisation strategy is libSize
-if(opt$normalisation %in% c("libsize", "maxpeak", "none")) {
+if(opt$normalisation %in% c("libsize", "maxpeak", "libsize_maxpeak", "none")) {
   
   libSizes <- lapply(xlinks, function(x) { sum(abs(x$score)) })
 
-} else if(opt$normalisation == "custom") {
+} else if(opt$normalisation == "custom" | opt$normalisation == "custom_maxpeak") {
   
   if(is.null(opt$size_factors)) {
     
@@ -286,11 +287,13 @@ setkey(xlinks.dt, sample)
 message("INFO: ...normalising")
 xlinks.dt[, norm := switch(opt$normalisation, 
                            "libsize" = (score * 1e6)/libSize,
+                           "libsize_maxpeak" = (score * 1e6)/libSize,
                           #  "maxpeak" = score/max(score),
                           #  "maxpeak" = (score * 1e6)/libSize,
                            "maxpeak" = score,
                            "none" = score,
-                           "custom" = score/libSize), 
+                           "custom" = score/libSize,
+                           "custom_maxpeak" = score/libSize), 
           by = sample]
 
 # Do the smoothing
@@ -311,14 +314,16 @@ if(!is.null(opt$groups)) {
 }
 
 # Now normalise to max peak after smoothing
-if(opt$normalisation == "maxpeak" & is.null(opt$groups)) xlinks.dt[, smoothed := smoothed/(max(smoothed)), by = sample]
-if(opt$normalisation == "maxpeak" & !is.null(opt$groups)) xlinks.dt[, smoothed := smoothed/(max(smoothed)), by = grp]
+if(grepl("maxpeak",opt$normalisation) & is.null(opt$groups)) xlinks.dt[, smoothed := smoothed/(max(smoothed)), by = sample]
+if(grepl("maxpeak",opt$normalisation) & !is.null(opt$groups)) xlinks.dt[, smoothed := smoothed/(max(smoothed)), by = grp]
 
 y.label <- switch(opt$normalisation, 
                   "libsize" = "Crosslink signal\n(counts per million)",
+                  "libsize_maxpeak" = "Crosslink signal\n(counts per million\nnormalised to max peak)",
                   "maxpeak" = "Crosslink signal\n(normalised to max peak)",
                   "none" = "Raw crosslink signal",
-                  "custom" = "Crosslink signal\n(custom normalisation)")
+                  "custom" = "Crosslink signal\n(custom normalisation)",
+                  "custom_maxpeak" = "Crosslink signal\n(custom normalisation\nadjusted to max peak)")
 
 # Plot top half
 if(is.null(opt$colours)) {
@@ -357,11 +362,11 @@ if(!is.null(opt$groups)) {
 
   if(opt$scale_y == TRUE) {
 
-    p.iclip <- p.iclip + facet_grid(grp ~ ., scales = "free_y", labeller = label_wrap_gen(20)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
+    p.iclip <- p.iclip + facet_grid(grp ~ ., scales = "free_y", labeller = label_wrap_gen(10)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
 
   } else {
 
-    p.iclip <- p.iclip + facet_grid(grp ~ ., labeller = label_wrap_gen(20)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
+    p.iclip <- p.iclip + facet_grid(grp ~ ., labeller = label_wrap_gen(10)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
 
   }
 }
@@ -468,7 +473,19 @@ if(!is.null(opt$coverage)) {
   coverage.grl <- lapply(coverage.grl, function(x) SubsetBedgraph(gr = x, selected.region.gr = region.gr))
   # coverage.grl <- lapply(auxiliary.grl, function(x) subsetByOverlaps(x, region.gr, ignore.strand = FALSE))
   coverage.dt <- rbindlist(lapply(coverage.grl, as.data.table))
-  coverage.dt$exp <- rep(gsub(".bw|.bigwig|.bigWig", "", coverage.files), elementNROWS(coverage.grl))
+
+    # Names of coverage tracks
+  if (!is.null(opt$coverage_labels)) {
+  
+    coverage.dt$exp <-  rep(strsplit(opt$coverage_labels, ",")[[1]], elementNROWS(coverage.grl))
+    coverage.dt$exp <- factor(coverage.dt$exp, levels=strsplit(opt$coverage_labels, ",")[[1]])
+  
+  } else {
+  
+    coverage.dt$exp <- rep(gsub(".bw|.bigwig|.bigWig", "", coverage.files), elementNROWS(coverage.grl))
+    coverage.dt$exp <- factor(coverage.dt$exp, levels=gsub(".bw|.bigwig|.bigWig", "", coverage.files))
+  
+  }
   
   p.coverage <- ggplot(coverage.dt, aes(x = start, y = score, col = exp)) +
     geom_line() +
@@ -476,7 +493,7 @@ if(!is.null(opt$coverage)) {
          y = "Coverage",
          colour = "") +
     scale_colour_tableau(palette = "Seattle Grays") +
-    facet_grid(exp ~ ., labeller=label_wrap_gen(20)) +
+    facet_grid(exp ~ ., labeller=label_wrap_gen(10)) +
     theme_minimal_grid(line_size = 0.1) + theme(legend.position = "none") + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0)) +
     xlim(start(region.gr), end(region.gr))
 
