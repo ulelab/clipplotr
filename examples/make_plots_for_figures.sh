@@ -45,6 +45,9 @@ $CLIPPLOTR \
 -r 'chr1:207513000:207515000:+' \
 --highlight '207513650:207513800' \
 -a none \
+--ratios '1,0,0,0' \
+--size_x 180 \
+--size_y 100 \
 -o '../../plots/CD55_unsmoothed.pdf'
 
 for i in 50 100 200; do
@@ -61,6 +64,9 @@ for i in 50 100 200; do
     -r 'chr1:207513000:207515000:+' \
     --highlight '207513650:207513800' \
     -a none \
+    --ratios '1,0,0,0' \
+    --size_x 180 \
+    --size_y 100 \
     -o "../../plots/CD55_rollmean_$i.pdf"
 
 done
@@ -96,7 +102,20 @@ $CLIPPLOTR \
 -a none \
 -o '../../plots/NDEL1_libsize_scaled.pdf'
 
-~/github/clipplotr/clipplotr \
+$CLIPPLOTR \
+-x 'ENCFF239CML.xl.bed.gz,ENCFF170YQV.xl.bed.gz,ENCFF515BTB.xl.bed.gz,ENCFF537RYR.xl.bed.gz,ENCFF296GDR.xl.bed.gz,ENCFF212IIR.xl.bed.gz' \
+-l 'HepG2 IP1,HepG2 IP2,HepG2 SMI,K562 IP1,K562_IP2,K562 SMI' \
+-c '#324376,#586BA4,#B4BCD6,#771434,#A54D69,#D2A6B4' \
+--groups 'HepG2,HepG2,HepG2,K562,K562,K562' \
+-n libsize_maxpeak \
+-y 'HepG2.bed.gz,K562.bed.gz' \
+--auxiliary_labels 'HepG2 peaks,K562 peaks' \
+-g gencode.v34.annotation.gtf.gz \
+-r 'chr17:8458500:8469500:+' \
+-a none \
+-o '../../plots/NDEL1_libsize_maxpeak.pdf'
+
+$CLIPPLOTR \
 -x 'ENCFF239CML.xl.bed.gz,ENCFF170YQV.xl.bed.gz,ENCFF515BTB.xl.bed.gz,ENCFF537RYR.xl.bed.gz,ENCFF296GDR.xl.bed.gz,ENCFF212IIR.xl.bed.gz' \
 -l 'HepG2 IP1,HepG2 IP2,HepG2 SMI,K562 IP1,K562_IP2,K562 SMI' \
 -c '#324376,#586BA4,#B4BCD6,#771434,#A54D69,#D2A6B4' \
