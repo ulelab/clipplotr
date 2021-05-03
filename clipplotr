@@ -335,7 +335,7 @@ p.iclip <- ggplot(xlinks.dt) +
        y = y.label,
        colour = "") +
   scale_colour_tableau(palette = "Tableau 10") +
-  theme_minimal_grid(line_size = 0.1) + theme(legend.position = "top") +
+  theme_minimal_grid() + theme(legend.position = "top") +
   xlim(start(region.gr),end(region.gr))
 
   } else {
@@ -350,7 +350,7 @@ p.iclip <- ggplot(xlinks.dt) +
            y = y.label,
            colour = "") +
       scale_colour_manual(values = cols) +
-      theme_minimal_grid(line_size = 0.1) + theme(legend.position = "top") +
+      theme_minimal_grid() + theme(legend.position = "top") +
       xlim(start(region.gr),end(region.gr))
 
 }
@@ -433,7 +433,7 @@ if(!is.null(opt$auxiliary)) {
         scale_fill_manual(values = auxiliary.cols) +
         labs(y = "",
              x = "") +
-        theme_minimal_grid(line_size = 0.1) + theme(legend.position = "none")
+        theme_minimal_grid() + theme(legend.position = "none")
       
     } else {
       
@@ -444,7 +444,7 @@ if(!is.null(opt$auxiliary)) {
         xlim(start(region.gr), end(region.gr)) +
         labs(y = "",
              x = "") +
-        theme_minimal_grid(line_size = 0.1)
+        theme_minimal_grid()
       
     }
 
@@ -494,7 +494,7 @@ if(!is.null(opt$coverage)) {
          colour = "") +
     scale_colour_tableau(palette = "Seattle Grays") +
     facet_grid(exp ~ ., labeller=label_wrap_gen(10)) +
-    theme_minimal_grid(line_size = 0.1) + theme(legend.position = "none") + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0)) +
+    theme_minimal_grid() + theme(legend.position = "none") + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0)) +
     xlim(start(region.gr), end(region.gr))
 
 }
@@ -547,7 +547,7 @@ if(opt$annotation == "gene") {
   p.annot <- ggplot() +
     geom_segment(data = sel.region.tiled.dt, mapping = aes(x = start, xend = end, y = group, yend = group), arrow = arrow(length = unit(0.1, "cm")), colour = "grey50") +
     geom_rect(data = sel.exons.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.25, ymax = group + 0.25, fill = gene_id)) +
-    theme_cowplot() + theme(axis.line.y = element_blank(), axis.ticks.y = element_blank(), axis.text.y = element_blank(), legend.position = "bottom") +
+    theme_minimal_vgrid() + theme(axis.line.y = element_blank(), axis.ticks.y = element_blank(), axis.text.y = element_blank(), legend.position = "bottom") +
     scale_fill_tableau() +
     labs(x = "Coordinate",
          y = "",
@@ -639,7 +639,7 @@ if(opt$annotation == "transcript") {
     geom_rect(data = sel.utr5_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.15, ymax = group + 0.15, fill = gene)) +
     geom_rect(data = sel.utr3_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.15, ymax = group + 0.15, fill = gene)) +
     scale_fill_tableau() +
-    theme_cowplot() + theme(axis.line.y = element_blank(), axis.ticks.y = element_blank(), axis.text.y = element_blank(), legend.position = "bottom") +
+    theme_minimal_vgrid() + theme(axis.line.y = element_blank(), axis.ticks.y = element_blank(), axis.text.y = element_blank(), legend.position = "bottom") +
     labs(x = "Coordinate",
          y = "",
          fill = "") +
@@ -703,7 +703,7 @@ p.annot <- ggplot(data = annot.grl) +
   geom_alignment(cds.rect.h = 0.1, length = unit(0.1, "cm"), fill = "black", stat = "identity") +
   labs(x = "Coordinate") +
       xlim(start(region.gr),end(region.gr)) +
-  theme_cowplot() + theme(axis.line.y = element_blank())
+  theme_minimal_vgrid() + theme(axis.line.y = element_blank())
 
 # Select out ggplot object
 p.annot <- p.annot@ggplot
