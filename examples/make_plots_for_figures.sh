@@ -15,9 +15,9 @@ CLIPPLOTR=~/github/clipplotr/clipplotr
 
 $CLIPPLOTR \
 -x 'hnRNPC_iCLIP_rep1_LUjh03_all_xlink_events.bedgraph.gz,hnRNPC_iCLIP_rep2_LUjh25_all_xlink_events.bedgraph.gz,U2AF65_iCLIP_ctrl_rep1_all_xlink_events.bedgraph.gz,U2AF65_iCLIP_ctrl_rep2_all_xlink_events.bedgraph.gz,U2AF65_iCLIP_KD1_rep2_all_xlink_events.bedgraph.gz,U2AF65_iCLIP_KD2_rep1_all_xlink_events.bedgraph.gz' \
--l 'hnRNPC 1,hnRNPC 2,U2AF65 WT 1,U2AF65 WT 2,U2AF65 KD 1,U2AF65 KD 2' \
+-l 'hnRNPC 1,hnRNPC 2,U2AF2 WT 1,U2AF2 WT 2,U2AF2 KD 1,U2AF2 KD 2' \
 -c '#586BA4,#324376,#0AA398,#067E79,#A54D69,#771434' \
---groups 'hnRNPC,hnRNPC,U2AF65 WT,U2AF65 WT,U2AF65 KD,U2AF65 KD' \
+--groups 'hnRNPC,hnRNPC,U2AF2 WT,U2AF2 WT,U2AF2 KD,U2AF2 KD' \
 -n libsize \
 -s rollmean \
 -w 50 \
@@ -36,9 +36,9 @@ $CLIPPLOTR \
 
 $CLIPPLOTR \
 -x 'hnRNPC_iCLIP_rep1_LUjh03_all_xlink_events.bedgraph.gz,hnRNPC_iCLIP_rep2_LUjh25_all_xlink_events.bedgraph.gz,U2AF65_iCLIP_ctrl_rep1_all_xlink_events.bedgraph.gz,U2AF65_iCLIP_ctrl_rep2_all_xlink_events.bedgraph.gz,U2AF65_iCLIP_KD1_rep2_all_xlink_events.bedgraph.gz,U2AF65_iCLIP_KD1_rep1_all_xlink_events.bedgraph.gz' \
--l 'hnRNPC 1,hnRNPC 2,U2AF65 WT 1,U2AF65 WT 2,U2AF65 KD 1,U2AF65 KD 2' \
+-l 'hnRNPC 1,hnRNPC 2,U2AF2 WT 1,U2AF2 WT 2,U2AF2 KD 1,U2AF2 KD 2' \
 -c '#586BA4,#324376,#0AA398,#067E79,#A54D69,#771434' \
---groups 'hnRNPC,hnRNPC,U2AF65 WT,U2AF65 WT,U2AF65 KD,U2AF65 KD' \
+--groups 'hnRNPC,hnRNPC,U2AF2 WT,U2AF2 WT,U2AF2 KD,U2AF2 KD' \
 -n libsize \
 -s none \
 -g gencode.v34lift37.annotation.gtf.gz \
@@ -54,9 +54,9 @@ for i in 50 100 200; do
 
     $CLIPPLOTR \
     -x 'hnRNPC_iCLIP_rep1_LUjh03_all_xlink_events.bedgraph.gz,hnRNPC_iCLIP_rep2_LUjh25_all_xlink_events.bedgraph.gz,U2AF65_iCLIP_ctrl_rep1_all_xlink_events.bedgraph.gz,U2AF65_iCLIP_ctrl_rep2_all_xlink_events.bedgraph.gz,U2AF65_iCLIP_KD1_rep2_all_xlink_events.bedgraph.gz,U2AF65_iCLIP_KD1_rep1_all_xlink_events.bedgraph.gz' \
-    -l 'hnRNPC 1,hnRNPC 2,U2AF65 WT 1,U2AF65 WT 2,U2AF65 KD 1,U2AF65 KD 2' \
+    -l 'hnRNPC 1,hnRNPC 2,U2AF2 WT 1,U2AF2 WT 2,U2AF2 KD 1,U2AF2 KD 2' \
     -c '#586BA4,#324376,#0AA398,#067E79,#A54D69,#771434' \
-    --groups 'hnRNPC,hnRNPC,U2AF65 WT,U2AF65 WT,U2AF65 KD,U2AF65 KD' \
+    --groups 'hnRNPC,hnRNPC,U2AF2 WT,U2AF2 WT,U2AF2 KD,U2AF2 KD' \
     -n libsize \
     -s rollmean \
     -w $i \
