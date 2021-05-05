@@ -197,9 +197,9 @@ cd test
 --size_factors '4.869687,9.488133,1.781117,10.135903,4.384385,8.227587' \
 -s rollmean \
 -w 50 \
--p 'test_Alu_rev.bed.gz' \
+-y 'test_Alu_rev.bed.gz' \
 --auxiliary_labels 'reverse Alu' \
---coverage 'test_CTRL_plus.bigwig,test_KD1_plus.bigwig,est_KD2_plus.bigwig' \
+--coverage 'test_CTRL_plus.bigwig,test_KD1_plus.bigwig,test_KD2_plus.bigwig' \
 --coverage_labels 'CTRL,KD1,KD2' \
 -g CD55_gencode.v34lift37.annotation.gtf.gz \
 -r 'chr1:207513000:207515000:+' \
