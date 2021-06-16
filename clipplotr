@@ -211,6 +211,12 @@ if(grepl("^ENS", opt$region)) {
 
 seqlevels(region.gr) <- as.character(unique(seqnames(region.gr))) # Cut down to one seqlevels for later comparision
 
+if(length(regions.gr) > 1) {
+
+  stop("ERROR: There are more than one genes with the given identifier. Consider specifying the coordinates instead.")
+
+}
+
 # ==========
 # Part 1a - top half: normalised and smoothed tracks
 # ==========
