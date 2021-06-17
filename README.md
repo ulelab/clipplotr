@@ -117,6 +117,12 @@ Where multiple files are specified for a parameter, these should be comma-separa
 
 * `--coverage` can be used to supply coverage tracks (e.g. RNA-seq or Quantseq). These should be supplied as BIGWIGs (as these files are not strand aware, ensure the BIGWIG for the correct strand as the region of interest is supplied). If multiple tracks are supplied, each one is plotted separately. Colours for the tracks are automatically generated up to a maximum of 8. The names are the first 10 characters of the filename.
 
+* `--coverage_labels` can be used to supply the unique names for the coverage tracks and the order should match `--coverage`.
+
+* `--coverage_colours` can be used to supply the colours in hexadecimal format for the coverage tracks and the order should match `--coverage`. If not provided, a default set of colours are automatically generated up to a maximum of 10 tracks.
+
+* `--coverage_groups` can be used to supply the group to which each coverage track belongs and can be used to facet the coverage plot. There should be an entry for each track and the order should match `--xlinks`. If not provided coverage tracks are all plotted together.
+
 ### 4. Annotation plot
 
 * `-g` or `--gtf` should be used to supply the reference GTF file. GENCODE files have been tested. The first time this GTF file is passed to _clipplotr_ it will generate and save an SQL TxDb database in the same location as the GTF file. This will be used for all future runs with the same GTF file.
@@ -161,7 +167,10 @@ Here, I have reproduced part of Figure 1C from [Zarnack et al. (2013)](https://d
 -w 50 \
 -y 'Alu_rev.bed.gz' \
 --auxiliary_labels 'reverse Alu' \
---coverage 'CTRL.bigwig,KD1.bigwig,KD2.bigwig' \
+--coverage 'ERR127306_plus.bigwig,ERR127307_plus.bigwig,ERR127308_plus.bigwig,ERR127309_plus.bigwig,ERR127302_plus.bigwig,ERR127303_plus.bigwig,ERR127304_plus.bigwig,ERR127305_plus.bigwig' \
+--coverage_labels 'CTRL1 1,CTRL1 2,CTRL2 1,CTRL2 2,KD1 1,KD1 2,KD2 1,KD2 2' \
+--coverage_colours '#A1D99B,#74C476,#31A354,#006D2C,#FDAE6B,#E6550D,#FC9272,#DE2D26' \
+--coverage_groups 'CTRL,CTRL,CTRL,CTRL,KD,KD,KD,KD' \
 -g gencode.v34lift37.annotation.gtf.gz \
 -r 'chr1:207513000:207515000:+' \
 --highlight '207513650:207513800' \
@@ -209,7 +218,5 @@ cd test
 -a transcript \
 -o test.pdf
 ```
-
-
 
 Note as we cannot calculate library sizes from the small subset dataset, here I have used custom normalisation with pre-calculated library size factors from the full CLIP bedgraph files.
