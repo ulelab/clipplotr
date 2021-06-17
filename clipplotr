@@ -537,10 +537,6 @@ if(!is.null(opt$coverage)) {
 
     p.coverage <- p.coverage + facet_grid(grp ~ ., labeller = label_wrap_gen(10)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
 
-  } else {
-
-    p.coverage <- p.coverage + facet_grid(exp ~ ., labeller=label_wrap_gen(10)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
-
   }
 
 }
