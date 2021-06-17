@@ -36,12 +36,13 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     (comma separated). Put 0 if any of these track types are absent. \
                     [default: 2 for xlinks, 0.25 for 1 auxiliary track 0.5 for >1, \
                     2 for coverage, 3 for annotation]"),
-                    make_option(c("-o", "--output"), action = "store", type = "character", help = "Output plot filename"))
+                    make_option(c("-o", "--output"), action = "store", type = "character", help = "Output plot filename"),
+                    make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE))
 
 opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
 
-# print(opt)
+if(opt$verbose) print(opt)
 
 # ==========
 # Checks for minimum parameters
@@ -213,7 +214,7 @@ if(grepl("^ENS", opt$region)) {
 
 seqlevels(region.gr) <- as.character(unique(seqnames(region.gr))) # Cut down to one seqlevels for later comparision
 
-if(length(regions.gr) > 1) {
+if(length(region.gr) > 1) {
 
   stop("ERROR: There are more than one genes with the given identifier. Consider specifying the coordinates instead.")
 
@@ -468,7 +469,7 @@ if(!is.null(opt$coverage)) {
   
   message("INFO: Plotting coverage track(s)")
   coverage.files <- strsplit(opt$coverage, ",")[[1]]
-  # coverage.grl <- lapply(coverage.files, import.bw, selection = region.gr) # addition selection speeds up loading
+  # coverage.grl <- lapply(coverage.files, import.bw, selection = region.gr) # addition selection speeds up loading - removed incase seqnames different style
   coverage.grl <- lapply(coverage.files, function(x) {
 
     gr <- import.bw(x)
@@ -497,7 +498,7 @@ if(!is.null(opt$coverage)) {
   
   if(!is.null(opt$coverage_groups)) {
 
-    coverage_groups.dt <- data.table(exp = levels(coverage.dt$exp), grp = strsplit(opt$coverage_groups, ",")[[1]])
+    coverage_groups.dt <- data.table(exp = factor(levels(coverage.dt$exp), levels(coverage.dt$exp)), grp = strsplit(opt$coverage_groups, ",")[[1]])
     coverage_groups.dt$grp <- factor(coverage_groups.dt$grp, levels = unique(strsplit(opt$coverage_groups, ",")[[1]]))
     coverage.dt <- merge(coverage.dt, coverage_groups.dt, by = "exp")
 
@@ -505,7 +506,7 @@ if(!is.null(opt$coverage)) {
 
   if(!is.null(opt$coverage_colours)) {
 
-    coverage_colours <- opt$coverage_colours
+    coverage_colours <- strsplit(opt$coverage_colours, ",")[[1]]
     names(coverage_colours) <- levels(coverage.dt$exp)
 
     p.coverage <- ggplot(coverage.dt, aes(x = start, y = score, col = exp)) +
@@ -515,30 +516,30 @@ if(!is.null(opt$coverage)) {
           colour = "") +
       scale_colour_manual(values = coverage_colours) +
       # facet_grid(exp ~ ., labeller=label_wrap_gen(10)) +
-      theme_minimal_grid() + theme(legend.position = "none") + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0)) +
+      theme_minimal_grid() + theme(legend.position = "bottom") + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0)) +
       xlim(start(region.gr), end(region.gr))
 
   } else {
 
     p.coverage <- ggplot(coverage.dt, aes(x = start, y = score, col = exp)) +
-    geom_line() +
-    labs(x = "",
-         y = "Coverage",
-         colour = "") +
-    scale_colour_tableau(palette = "Seattle Grays") +
-    # facet_grid(exp ~ ., labeller=label_wrap_gen(10)) +
-    theme_minimal_grid() + theme(legend.position = "none") + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0)) +
-    xlim(start(region.gr), end(region.gr))
+      geom_line() +
+      labs(x = "",
+           y = "Coverage",
+           colour = "") +
+      scale_colour_tableau(palette = "Superfishel Stone") +
+      # facet_grid(exp ~ ., labeller=label_wrap_gen(10)) +
+      theme_minimal_grid() + theme(legend.position = "bottom") + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0)) +
+      xlim(start(region.gr), end(region.gr))
 
   }
 
-  if(!is.null(opt$coverage_groups) {
+  if(!is.null(opt$coverage_groups)) {
 
     p.coverage <- p.coverage + facet_grid(grp ~ ., labeller = label_wrap_gen(10)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
 
   } else {
 
-    p.coverage <- p.coverage + facet_grid(exp ~ ., labeller=label_wrap_gen(10)) +
+    p.coverage <- p.coverage + facet_grid(exp ~ ., labeller=label_wrap_gen(10)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
 
   }
 
