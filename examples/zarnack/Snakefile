@@ -161,25 +161,25 @@ rule create_bigwig_KD2:
         bedGraphToBigWig {output.bg_neg} {params.chr_lengths} {output.bigwig_neg}
         """
 
-# rule create_bigwig:
-#     input:
-#         bam="mapped/{sample}.Aligned.sortedByCoord.out.bam"
-#     output:
-#         bigwig_pos="coverage/{sample}_plus.bigwig",
-#         bigwig_neg="coverage/{sample}_minus.bigwig",
-#         bg_pos=temp("coverage/{sample}.Signal.Unique.str1.out.bg"),
-#         bg_neg=temp("coverage/{sample}.Signal.Unique.str2.out.bg"),
-#         bg_multi_pos=temp("coverage/{sample}.Signal.UniqueMultiple.str1.out.bg"),
-#         bg_multi_neg=temp("coverage/{sample}.Signal.UniqueMultiple.str2.out.bg")
-#     params:
-#         outprefix="coverage/{sample}.",
-#         chr_lengths=CHR_LENGTHS,
-#         cluster="-J create_bigwig -N 1 -c 1 --mem=16G -t 12:00:00 -o logs/create_bigwig.{sample}.%A.log"
-#     shell:
-#         """
-#         STAR --runMode inputAlignmentsFromBAM --inputBAMfile {input.bam} --outWigType bedGraph --outWigStrand Stranded --outWigNorm RPM --outFileNamePrefix {params.outprefix}
-#         bedSort {output.bg_pos} {output.bg_pos}
-#         bedSort {output.bg_neg} {output.bg_neg}
-#         bedGraphToBigWig {output.bg_pos} {params.chr_lengths} {output.bigwig_pos}
-#         bedGraphToBigWig {output.bg_neg} {params.chr_lengths} {output.bigwig_neg}
-#         """
+rule create_bigwig:
+    input:
+        bam="mapped/{sample}.Aligned.sortedByCoord.out.bam"
+    output:
+        bigwig_pos="coverage/{sample}_plus.bigwig",
+        bigwig_neg="coverage/{sample}_minus.bigwig",
+        bg_pos=temp("coverage/{sample}.Signal.Unique.str1.out.bg"),
+        bg_neg=temp("coverage/{sample}.Signal.Unique.str2.out.bg"),
+        bg_multi_pos=temp("coverage/{sample}.Signal.UniqueMultiple.str1.out.bg"),
+        bg_multi_neg=temp("coverage/{sample}.Signal.UniqueMultiple.str2.out.bg")
+    params:
+        outprefix="coverage/{sample}.",
+        chr_lengths=CHR_LENGTHS,
+        cluster="-J create_bigwig -N 1 -c 1 --mem=16G -t 12:00:00 -o logs/create_bigwig.{sample}.%A.log"
+    shell:
+        """
+        STAR --runMode inputAlignmentsFromBAM --inputBAMfile {input.bam} --outWigType bedGraph --outWigStrand Stranded --outWigNorm RPM --outFileNamePrefix {params.outprefix}
+        bedSort {output.bg_pos} {output.bg_pos}
+        bedSort {output.bg_neg} {output.bg_neg}
+        bedGraphToBigWig {output.bg_pos} {params.chr_lengths} {output.bigwig_pos}
+        bedGraphToBigWig {output.bg_neg} {params.chr_lengths} {output.bigwig_neg}
+        """
