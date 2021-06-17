@@ -23,7 +23,10 @@ $CLIPPLOTR \
 -w 50 \
 -y 'Alu_rev.bed.gz' \
 --auxiliary_labels 'reverse Alu' \
---coverage 'CTRL.bigwig,KD1.bigwig,KD2.bigwig' \
+--coverage 'ERR127306_plus.bigwig,ERR127307_plus.bigwig,ERR127308_plus.bigwig,ERR127309_plus.bigwig,ERR127302_plus.bigwig,ERR127303_plus.bigwig,ERR127304_plus.bigwig,ERR127305_plus.bigwig' \
+--coverage_labels 'CTRL1 1,CTRL1 2,CTRL2 1,CTRL2 2,KD1 1,KD1 2,KD2 1,KD2 2' \
+--coverage_colours '#A1D99B,#74C476,#31A354,#006D2C,#FDAE6B,#E6550D,#FC9272,#DE2D26' \
+--coverage_groups 'CTRL,CTRL,CTRL,CTRL,KD,KD,KD,KD' \
 -g gencode.v34lift37.annotation.gtf.gz \
 -r 'chr1:207513000:207515000:+' \
 --highlight '207513650:207513800' \
@@ -91,18 +94,20 @@ $CLIPPLOTR \
 --size_y 200 \
 -o '../../plots/NDEL1_libsize_gene.pdf'
 
-# $CLIPPLOTR \
-# -x 'ENCFF239CML.xl.bed.gz,ENCFF170YQV.xl.bed.gz,ENCFF515BTB.xl.bed.gz,ENCFF537RYR.xl.bed.gz,ENCFF296GDR.xl.bed.gz,ENCFF212IIR.xl.bed.gz' \
-# -l 'HepG2 IP1,HepG2 IP2,HepG2 SMI,K562 IP1,K562_IP2,K562 SMI' \
-# -c '#324376,#586BA4,#B4BCD6,#771434,#A54D69,#D2A6B4' \
-# --groups 'HepG2,HepG2,HepG2,K562,K562,K562' \
-# -n libsize \
-# -y 'HepG2.bed.gz,K562.bed.gz' \
-# --auxiliary_labels 'HepG2 peaks,K562 peaks' \
-# -g gencode.v34.annotation.gtf.gz \
-# -r 'chr17:8458500:8469500:+' \
-# -a transcript \
-# -o '../../plots/NDEL1_libsize.pdf'
+$CLIPPLOTR \
+-x 'ENCFF239CML.xl.bed.gz,ENCFF170YQV.xl.bed.gz,ENCFF515BTB.xl.bed.gz,ENCFF537RYR.xl.bed.gz,ENCFF296GDR.xl.bed.gz,ENCFF212IIR.xl.bed.gz' \
+-l 'HepG2 IP1,HepG2 IP2,HepG2 SMI,K562 IP1,K562_IP2,K562 SMI' \
+-c '#324376,#586BA4,#B4BCD6,#771434,#A54D69,#D2A6B4' \
+--groups 'HepG2,HepG2,HepG2,K562,K562,K562' \
+-n none \
+--scale_y \
+-g gencode.v34.annotation.gtf.gz \
+-r 'chr17:8458500:8469500:+' \
+-a none \
+--ratio '2,0.5,0,0.25' \
+--size_x 200 \
+--size_y 100 \
+-o '../../plots/NDEL1_raw_scaled.pdf'
 
 $CLIPPLOTR \
 -x 'ENCFF239CML.xl.bed.gz,ENCFF170YQV.xl.bed.gz,ENCFF515BTB.xl.bed.gz,ENCFF537RYR.xl.bed.gz,ENCFF296GDR.xl.bed.gz,ENCFF212IIR.xl.bed.gz' \
