@@ -225,8 +225,10 @@ cd test
 -w 50 \
 -y 'test_Alu_rev.bed.gz' \
 --auxiliary_labels 'reverse Alu' \
---coverage 'test_CTRL_plus.bigwig,test_KD1_plus.bigwig,test_KD2_plus.bigwig' \
---coverage_labels 'CTRL,KD1,KD2' \
+--coverage 'test_ERR127306_plus.bigwig,test_ERR127307_plus.bigwig,test_ERR127308_plus.bigwig,test_ERR127309_plus.bigwig,test_ERR127302_plus.bigwig,test_ERR127303_plus.bigwig,test_ERR127304_plus.bigwig,test_ERR127305_plus.bigwig' \
+--coverage_labels 'CTRL1 1,CTRL1 2,CTRL2 1,CTRL2 2,KD1 1,KD1 2,KD2 1,KD2 2' \
+--coverage_colours '#A1D99B,#74C476,#31A354,#006D2C,#FDAE6B,#E6550D,#FC9272,#DE2D26' \
+--coverage_groups 'CTRL,CTRL,CTRL,CTRL,KD,KD,KD,KD' \
 -g CD55_gencode.v34lift37.annotation.gtf.gz \
 -r 'chr1:207513000:207515000:+' \
 --highlight '207513650:207513800' \
