@@ -88,6 +88,7 @@ $CLIPPLOTR \
 --auxiliary_labels 'HepG2 peaks,K562 peaks' \
 -g gencode.v34.annotation.gtf.gz \
 -r 'chr17:8458500:8469500:+' \
+--highlight '8462500:8467500' \
 -a gene \
 --ratio '2,0.5,0,0.25' \
 --size_x 200 \
@@ -99,44 +100,16 @@ $CLIPPLOTR \
 -l 'HepG2 IP1,HepG2 IP2,HepG2 SMI,K562 IP1,K562_IP2,K562 SMI' \
 -c '#324376,#586BA4,#B4BCD6,#771434,#A54D69,#D2A6B4' \
 --groups 'HepG2,HepG2,HepG2,K562,K562,K562' \
--n none \
---scale_y \
--g gencode.v34.annotation.gtf.gz \
--r 'chr17:8458500:8469500:+' \
--a none \
---ratio '2,0.5,0,0.25' \
---size_x 200 \
---size_y 100 \
--o '../../plots/NDEL1_raw_scaled.pdf'
-
-$CLIPPLOTR \
--x 'ENCFF239CML.xl.bed.gz,ENCFF170YQV.xl.bed.gz,ENCFF515BTB.xl.bed.gz,ENCFF537RYR.xl.bed.gz,ENCFF296GDR.xl.bed.gz,ENCFF212IIR.xl.bed.gz' \
--l 'HepG2 IP1,HepG2 IP2,HepG2 SMI,K562 IP1,K562_IP2,K562 SMI' \
--c '#324376,#586BA4,#B4BCD6,#771434,#A54D69,#D2A6B4' \
---groups 'HepG2,HepG2,HepG2,K562,K562,K562' \
 -n libsize \
 --scale_y \
 -g gencode.v34.annotation.gtf.gz \
--r 'chr17:8458500:8469500:+' \
+-r 'chr17:8462500:8467500:+' \
 -a none \
 --ratio '2,0.5,0,0.25' \
 --size_x 200 \
 --size_y 100 \
+--tidy_y_labels 4 \
 -o '../../plots/NDEL1_libsize_scaled.pdf'
-
-$CLIPPLOTR \
--x 'ENCFF239CML.xl.bed.gz,ENCFF170YQV.xl.bed.gz,ENCFF515BTB.xl.bed.gz,ENCFF537RYR.xl.bed.gz,ENCFF296GDR.xl.bed.gz,ENCFF212IIR.xl.bed.gz' \
--l 'HepG2 IP1,HepG2 IP2,HepG2 SMI,K562 IP1,K562_IP2,K562 SMI' \
--c '#324376,#586BA4,#B4BCD6,#771434,#A54D69,#D2A6B4' \
---groups 'HepG2,HepG2,HepG2,K562,K562,K562' \
--n libsize_maxpeak \
--g gencode.v34.annotation.gtf.gz \
--r 'chr17:8458500:8469500:+' \
--a none \
---ratio '2,0.5,0,0.25' \
---size_x 205 \
---size_y 100 \
--o '../../plots/NDEL1_libsize_maxpeak.pdf'
 
 $CLIPPLOTR \
 -x 'ENCFF239CML.xl.bed.gz,ENCFF170YQV.xl.bed.gz,ENCFF515BTB.xl.bed.gz,ENCFF537RYR.xl.bed.gz,ENCFF296GDR.xl.bed.gz,ENCFF212IIR.xl.bed.gz' \
@@ -145,9 +118,25 @@ $CLIPPLOTR \
 --groups 'HepG2,HepG2,HepG2,K562,K562,K562' \
 -n maxpeak \
 -g gencode.v34.annotation.gtf.gz \
--r 'chr17:8458500:8469500:+' \
+-r 'chr17:8462500:8467500:+' \
 -a none \
 --ratio '2,0.5,0,0.25' \
---size_x 200 \
+--size_x 198 \
 --size_y 100 \
+--tidy_y_labels 3 \
 -o '../../plots/NDEL1_maxpeak.pdf'
+
+$CLIPPLOTR \
+-x 'ENCFF239CML.xl.bed.gz,ENCFF170YQV.xl.bed.gz,ENCFF515BTB.xl.bed.gz,ENCFF537RYR.xl.bed.gz,ENCFF296GDR.xl.bed.gz,ENCFF212IIR.xl.bed.gz' \
+-l 'HepG2 IP1,HepG2 IP2,HepG2 SMI,K562 IP1,K562_IP2,K562 SMI' \
+-c '#324376,#586BA4,#B4BCD6,#771434,#A54D69,#D2A6B4' \
+--groups 'HepG2,HepG2,HepG2,K562,K562,K562' \
+-n libsize_maxpeak \
+-g gencode.v34.annotation.gtf.gz \
+-r 'chr17:8462500:8467500:+' \
+-a none \
+--ratio '2,0.5,0,0.25' \
+--size_x 207 \
+--size_y 100 \
+--tidy_y_labels 3 \
+-o '../../plots/NDEL1_libsize_maxpeak.pdf'
