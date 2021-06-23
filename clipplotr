@@ -394,7 +394,8 @@ if(!is.null(opt$highlight)) {
 
 if(!is.null(opt$tidy_y_labels)) {
 
-  p.iclip <- p.iclip + scale_y_continuous(breaks = scales::breaks_extended(n = opt$tidy_y_labels))
+  # p.iclip <- p.iclip + scale_y_continuous(breaks = scales::breaks_extended(n = opt$tidy_y_labels))
+  p.iclip <- p.iclip + scale_y_continuous(n.breaks = opt$tidy_y_labels)
 
 }
 
