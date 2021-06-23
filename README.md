@@ -124,6 +124,8 @@ Where multiple files are specified for a parameter, these should be comma-separa
 
 * `--highlight` can be used to specify a region in the format `'start_coordinate:end_coordinate'`. This will be highlighted by grey shading. 
 
+* `--tidy_y_labels` can be use to tidy the y-axis labels and keep alternate ones if there are 5 or more.
+
 ### 2. Auxiliary plot
 
 * `-y` or `--auxiliary` can be used to supply the auxiliary tracks. These should be in a standard 6-column BED format. Optionally, if a 9-column BED file is supplied then the 9th column `itemRgb` will be used to colour the intervals. These tracks could be peak intervals, but could be any features of interest. You can label the tracks with `--auxiliary_labels`, otherwise the first 10 characters of the filename are used.

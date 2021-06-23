@@ -26,7 +26,8 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("", "--highlight"), action = "store", type = "character", help = "Region to highlight as 35754106:35856276"),                    
                     make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize, custom, libsize_maxpeak, custom_maxpeak [default %default]", default = "libsize"),
                     make_option(c("", "--size_factors"), action = "store", type = "character", help = "Size factors for custom normalisation (comma separated)"),
-                    make_option(c("", "--scale_y"), action = "store_true", type = "logical", help = "Scale facetted CLIP y-axis", default = FALSE),
+                    make_option(c("", "--scale_y"), action = "store_true", type = "logical", help = "Scale CLIP y-axis for each group independently", default = FALSE),
+                    make_option(c("", "--tidy_y_labels"), action = "store", type = "integer", help = "Keep this many y-axis labels (may be slightly more or fewer depending on data)"),
                     make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, gaussian [default %default]", default = "rollmean"),
                     make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window [default %default]", default = 100),
                     make_option(c("-a", "--annotation"), action = "store", type = "character", help = "Annotation options: original, gene, transcript, none [default %default]", default = "transcript"),
@@ -391,6 +392,12 @@ if(!is.null(opt$highlight)) {
   
 }
 
+if(!is.null(opt$tidy_y_labels)) {
+
+  p.iclip <- p.iclip + scale_y_continuous(breaks = scales::breaks_extended(n = opt$tidy_y_labels))
+
+}
+
 # ==========
 # Part 1b - top half: auxiliary file annotation (eg.peaks)
 # ==========
@@ -515,7 +522,6 @@ if(!is.null(opt$coverage)) {
           y = "Coverage",
           colour = "") +
       scale_colour_manual(values = coverage_colours) +
-      # facet_grid(exp ~ ., labeller=label_wrap_gen(10)) +
       theme_minimal_grid() + theme(legend.position = "bottom") + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0)) +
       xlim(start(region.gr), end(region.gr))
 
@@ -527,7 +533,6 @@ if(!is.null(opt$coverage)) {
            y = "Coverage",
            colour = "") +
       scale_colour_tableau(palette = "Superfishel Stone") +
-      # facet_grid(exp ~ ., labeller=label_wrap_gen(10)) +
       theme_minimal_grid() + theme(legend.position = "bottom") + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0)) +
       xlim(start(region.gr), end(region.gr))
 
@@ -671,11 +676,6 @@ if(opt$annotation == "transcript") {
   # Plot
   p.annot <- ggplot() +
     geom_segment(data = sel.region.tiled.dt, mapping = aes(x = start, xend = end, y = group, yend = group), arrow = arrow(length = unit(0.1, "cm")), colour = "grey50") +
-    # geom_rect(data = sel.exons_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.25, ymax = group + 0.25), fill = "black") +
-    # geom_rect(data = sel.cds_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.25, ymax = group + 0.25), fill = "black") +
-    # geom_rect(data = sel.utr5_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.15, ymax = group + 0.15), fill = "black") +
-    # geom_rect(data = sel.utr3_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.15, ymax = group + 0.15), fill = "black") +
-    # geom_text(data = tx.order.dt, aes(label = transcript_id, y = group, x = centre), size = 3, vjust = 0) +
     geom_rect(data = sel.exons_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.25, ymax = group + 0.25, fill = gene)) +
     geom_rect(data = sel.cds_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.25, ymax = group + 0.25, fill = gene)) +
     geom_rect(data = sel.utr5_tx.dt, mapping = aes(xmin = start, xmax = end, ymin = group - 0.15, ymax = group + 0.15, fill = gene)) +
@@ -686,14 +686,6 @@ if(opt$annotation == "transcript") {
          y = "",
          fill = "") +
     coord_cartesian(xlim = c(start(region), end(region)))
-  
-  # 
-  # if(opt$show_tx_name == TRUE) {
-  #   
-  #   p.annot <- p.annot + geom_text(data = tx.order.dt, aes(label = transcript_id, y = group + 0.3, x = centre), size = 3, vjust = 0)
-  #   # Need to fix ones that are outside of window
-  #   
-  # }
   
 }
 
@@ -777,8 +769,7 @@ if(is.null(opt$ratios)){ #if the user hasnt specified ratios
     # Could change this to ifelse depending on annotation style
   }
   p <- p + plot_layout(heights = ratios) 
-} else { #if the user has specified ratios
-  # rts = unlist(strsplit(opt$ratios, ",")) # This is already defined at the beginning
+} else { 
   p <- p.iclip
   ratios <- rts[[1]]
   if(exists("p.auxiliary")) {
