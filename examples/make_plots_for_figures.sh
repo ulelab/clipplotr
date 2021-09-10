@@ -86,7 +86,7 @@ $CLIPPLOTR \
 -n libsize \
 -y 'HepG2.bed.gz,K562.bed.gz' \
 --auxiliary_labels 'HepG2 peaks,K562 peaks' \
--g gencode.v34.annotation.gtf.gz \
+-g gencode.v34.basic.annotation.gtf.gz \
 -r 'chr17:8458500:8469500:+' \
 --highlight '8462500:8467500' \
 -a gene \
