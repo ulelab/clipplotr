@@ -124,6 +124,8 @@ Where multiple files are specified for a parameter, these should be comma-separa
 
 * `--highlight` can be used to specify a region in the format `'start_coordinate:end_coordinate'`. This will be highlighted by grey shading. 
 
+* `--tidy_y_labels` can be use to tidy the y-axis labels and keep alternate ones if there are 5 or more.
+
 ### 2. Auxiliary plot
 
 * `-y` or `--auxiliary` can be used to supply the auxiliary tracks. These should be in a standard 6-column BED format. Optionally, if a 9-column BED file is supplied then the 9th column `itemRgb` will be used to colour the intervals. These tracks could be peak intervals, but could be any features of interest. You can label the tracks with `--auxiliary_labels`, otherwise the first 10 characters of the filename are used.
@@ -225,8 +227,10 @@ cd test
 -w 50 \
 -y 'test_Alu_rev.bed.gz' \
 --auxiliary_labels 'reverse Alu' \
---coverage 'test_CTRL_plus.bigwig,test_KD1_plus.bigwig,test_KD2_plus.bigwig' \
---coverage_labels 'CTRL,KD1,KD2' \
+--coverage 'test_ERR127306_plus.bigwig,test_ERR127307_plus.bigwig,test_ERR127308_plus.bigwig,test_ERR127309_plus.bigwig,test_ERR127302_plus.bigwig,test_ERR127303_plus.bigwig,test_ERR127304_plus.bigwig,test_ERR127305_plus.bigwig' \
+--coverage_labels 'CTRL1 1,CTRL1 2,CTRL2 1,CTRL2 2,KD1 1,KD1 2,KD2 1,KD2 2' \
+--coverage_colours '#A1D99B,#74C476,#31A354,#006D2C,#FDAE6B,#E6550D,#FC9272,#DE2D26' \
+--coverage_groups 'CTRL,CTRL,CTRL,CTRL,KD,KD,KD,KD' \
 -g CD55_gencode.v34lift37.annotation.gtf.gz \
 -r 'chr1:207513000:207515000:+' \
 --highlight '207513650:207513800' \
