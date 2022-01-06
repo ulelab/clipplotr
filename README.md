@@ -21,7 +21,7 @@ _clipplotr_ is a self-contained command-line tool written in R to facilitate com
 
 To install _clipplotr_, either clone the repository with
 ```
-git clone ulelab/clipplotr
+git clone https://github.com/ulelab/clipplotr.git
 ```
 for the latest version, or download from the [releases](https://github.com/ulelab/clipplotr/releases) page, which may be missing some of the latest features.
 
@@ -29,8 +29,9 @@ There are two options for installing the dependencies.
 
 ### 1. Conda option
 
-If you have Conda on your system you can create a virtual environment which installs R and all the dependencies using the provided YAML and running:
+If you have Conda on your system you can create a virtual environment which installs R and all the dependencies using the provided YAML. First move into the directory into which you clone _clipplotr_ and then run:
 ```
+cd clipplotr
 conda env create -f environment.yml
 ```
 
@@ -41,9 +42,10 @@ conda activate clipplotr
 
 ### 2. R option
 
-_clipplotr_ requires R to be installed on your system and uses some R (`optparse`, `BiocManager`, `ggplot2`, `ggthemes`, `cowplot`, `patchwork`, `smoother`, `zoo`, `data.table`) and Bioconductor packages (`rtracklayer`, `GenomicFeatures`). If you have R already installed, you can run the helper script to install the packages if needed:
+_clipplotr_ requires R to be installed on your system and uses some R (`optparse`, `BiocManager`, `ggplot2`, `ggthemes`, `cowplot`, `patchwork`, `smoother`, `zoo`, `data.table`) and Bioconductor packages (`rtracklayer`, `GenomicFeatures`). If you have R already installed, you can use the helper script to install the packages if needed. First move into the directory into which you clone _clipplotr_ and then run
 
 ````
+cd clipplotr
 Rscript install_libraries.R
 ````
 
