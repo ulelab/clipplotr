@@ -1,5 +1,9 @@
 # _clipplotr_
 
+Check out our [preprint](https://www.biorxiv.org/content/10.1101/2021.09.10.459763v1.abstract):
+
+Chakrabarti, A. M., Capitanchik, C., Ule, J., & Luscombe, N. M. (2021). clipplotr-a comparative visualisation and analysis tool for CLIP data. bioRxiv.
+
 ## Table of contents
 
 1. [About _clipplotr_](#about-clipplotr)
