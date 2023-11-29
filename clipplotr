@@ -29,6 +29,7 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("", "--size_factors"), action = "store", type = "character", help = "Size factors for custom normalisation (comma separated)"),
                     make_option(c("", "--scale_y"), action = "store_true", type = "logical", help = "Scale CLIP y-axis for each group independently", default = FALSE),
                     make_option(c("", "--tidy_y_labels"), action = "store", type = "integer", help = "Keep this many y-axis labels (may be slightly more or fewer depending on data)"),
+                    make_option(c("", "--flip_x"), action = "store_true", type = "logical", help = "Flip the x-axis for plotting e.g. genes on the negative strand", default = FALSE),
                     make_option(c("-s", "--smoothing"), action = "store", type = "character", help = "Smoothing options: none, rollmean, gaussian [default %default]", default = "rollmean"),
                     make_option(c("-w", "--smoothing_window"), action = "store", type = "integer", help = "Smoothing window [default %default]", default = 100),
                     make_option(c("-a", "--annotation"), action = "store", type = "character", help = "Annotation options: original, gene, transcript, none [default %default]", default = "transcript"),
@@ -45,6 +46,7 @@ opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
 
 if(opt$verbose) print(opt)
+# if(opt$verbose) saveRDS(opt, "opt.rds")
 
 # ==========
 # Checks for minimum parameters
@@ -222,7 +224,6 @@ if(length(region.gr) > 1) {
 
 }
 
-
 print(region.gr)
 
 # ==========
@@ -349,8 +350,8 @@ p.iclip <- ggplot(xlinks.dt) +
        y = y.label,
        colour = "") +
   scale_colour_tableau(palette = "Tableau 10") +
-  theme_minimal_grid() + theme(legend.position = "top") +
-  xlim(start(region.gr),end(region.gr))
+  theme_minimal_grid() + theme(legend.position = "top") #+
+  # xlim(start(region.gr),end(region.gr))
 
   } else {
 
@@ -364,8 +365,8 @@ p.iclip <- ggplot(xlinks.dt) +
            y = y.label,
            colour = "") +
       scale_colour_manual(values = cols) +
-      theme_minimal_grid() + theme(legend.position = "top") +
-      xlim(start(region.gr),end(region.gr))
+      theme_minimal_grid() + theme(legend.position = "top") #+
+      # xlim(start(region.gr),end(region.gr))
 
 }
 
@@ -400,6 +401,16 @@ if(!is.null(opt$tidy_y_labels)) {
 
   # p.iclip <- p.iclip + scale_y_continuous(breaks = scales::breaks_extended(n = opt$tidy_y_labels))
   p.iclip <- p.iclip + scale_y_continuous(n.breaks = opt$tidy_y_labels)
+
+}
+
+if(opt$flip_x) {
+
+  p.iclip <- p.iclip + scale_x_reverse(limits = rev(c(start(region.gr), end(region.gr))))
+
+} else {
+
+  p.iclip <- p.iclip + scale_x_continuous(limits = c(start(region.gr), end(region.gr)))
 
 }
 
@@ -450,7 +461,7 @@ if(!is.null(opt$auxiliary)) {
         geom_tile() +
         scale_y_discrete(breaks = auxiliary.labels,
                          limits = rev(sort(auxiliary.labels))) +
-        xlim(start(region.gr), end(region.gr)) +
+        # xlim(start(region.gr), end(region.gr)) +
         scale_fill_manual(values = auxiliary.cols) +
         labs(y = "",
              x = "") +
@@ -462,7 +473,7 @@ if(!is.null(opt$auxiliary)) {
         geom_tile() +
         scale_y_discrete(breaks = auxiliary.labels,
                          limits = rev(sort(auxiliary.labels))) +
-        xlim(start(region.gr), end(region.gr)) +
+        # xlim(start(region.gr), end(region.gr)) +
         labs(y = "",
              x = "") +
         theme_minimal_grid()
@@ -471,7 +482,18 @@ if(!is.null(opt$auxiliary)) {
 
   }
 
+  if(opt$flip_x) {
+
+    p.auxiliary <- p.auxiliary + scale_x_reverse(limits = rev(c(start(region.gr), end(region.gr))))
+
+  } else {
+
+    p.auxiliary <- p.auxiliary + scale_x_continuous(limits = c(start(region.gr), end(region.gr)))
+
+  }
+
 }
+
 
 # ==========
 # Part 1c - top half: RNA-seq/coverage tracks
@@ -527,8 +549,8 @@ if(!is.null(opt$coverage)) {
           y = "Coverage",
           colour = "") +
       scale_colour_manual(values = coverage_colours) +
-      theme_minimal_grid() + theme(legend.position = "bottom") + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0)) +
-      xlim(start(region.gr), end(region.gr))
+      theme_minimal_grid() + theme(legend.position = "bottom") + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0)) #+
+      # xlim(start(region.gr), end(region.gr))
 
   } else {
 
@@ -538,14 +560,24 @@ if(!is.null(opt$coverage)) {
            y = "Coverage",
            colour = "") +
       scale_colour_tableau(palette = "Superfishel Stone") +
-      theme_minimal_grid() + theme(legend.position = "bottom") + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0)) +
-      xlim(start(region.gr), end(region.gr))
+      theme_minimal_grid() + theme(legend.position = "bottom") + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0)) #+
+      # xlim(start(region.gr), end(region.gr))
 
   }
 
   if(!is.null(opt$coverage_groups)) {
 
     p.coverage <- p.coverage + facet_grid(grp ~ ., scales = "free_y", labeller = label_wrap_gen(10)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
+
+  }
+
+  if(opt$flip_x) {
+
+    p.coverage <- p.coverage + scale_x_reverse(limits = rev(c(start(region.gr), end(region.gr))))
+
+  } else {
+
+    p.coverage <- p.coverage + scale_x_continuous(limits = c(start(region.gr), end(region.gr)))
 
   }
 
@@ -603,8 +635,18 @@ if(opt$annotation == "gene") {
     scale_fill_tableau() +
     labs(x = "Coordinate",
          y = "",
-         fill = "") +
-    coord_cartesian(xlim = c(start(region.gr), end(region.gr)))
+         fill = "") # +
+    # coord_cartesian(xlim = c(start(region.gr), end(region.gr)))
+
+  if(opt$flip_x) {
+
+    p.annot <- p.annot + scale_x_reverse() + coord_cartesian(xlim = rev(c(start(region.gr), end(region.gr))))
+
+  } else {
+      
+    p.annot <- p.annot + scale_x_continuous() + coord_cartesian(xlim = c(start(region.gr), end(region.gr)))
+
+  }
 
 }
 
@@ -689,9 +731,19 @@ if(opt$annotation == "transcript") {
     theme_minimal_vgrid() + theme(axis.line.y = element_blank(), axis.ticks.y = element_blank(), axis.text.y = element_blank(), legend.position = "bottom") +
     labs(x = "Coordinate",
          y = "",
-         fill = "") +
-    coord_cartesian(xlim = c(start(region), end(region)))
+         fill = "") #+
+    # coord_cartesian(xlim = c(start(region), end(region)))
   
+  if(opt$flip_x) {
+
+    p.annot <- p.annot + scale_x_reverse() + coord_cartesian(xlim = rev(c(start(region.gr), end(region.gr))))
+
+  } else {
+      
+    p.annot <- p.annot + scale_x_continuous() + coord_cartesian(xlim = c(start(region.gr), end(region.gr)))
+
+  }
+
 }
 
 # ==========
