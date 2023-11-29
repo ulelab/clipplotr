@@ -176,6 +176,8 @@ Where multiple files are specified for a parameter, these should be comma-separa
 
 * `--ratios` allows you to specify the relative sizing of the combined plots. Specify plot ratios in order: xlink track, auxiliary tracks, coverage track, annotation track (comma separated). Put 0 if any of these track types are absent. (default: 2 for xlinks, 0.25 for 1 auxiliary track 0.5 for >1, 2 for coverage, 3 for annotation)
 
+* `--no_ucsc` will skip checking the chromosome/sequence levels style in the provided files. If you use this option make sure they match up across all the BED, Bedgraph, Bigwig and GTF files.
+
 ## Example
 
 This is an example which shows many of the features of _clipplotr_ in action.

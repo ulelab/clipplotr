@@ -22,6 +22,7 @@ option_list <- list(make_option(c("-x", "--xlinks"), action = "store", type = "c
                     make_option(c("", "--coverage_colours"), action = "store", type = "character", help = "Colours for coverage data (comma separated in same order as files)"),
                     make_option(c("", "--coverage_groups"), action = "store", type = "character", help = "Grouping of coverage data (comma separated in same order as files)"),
                     make_option(c("-g", "--gtf"), action = "store", type = "character", help = "Reference GTF file (Gencode)"),
+                    make_option(c("", "--no_ucsc"), action = "store_true", type = "logical", help = "GTF has non-standard sequences", default = FALSE),
                     make_option(c("-r", "--region"), action = "store", type = "character", help = "Region of interest as chr3:35754106:35856276:+ or gene as ENSMUSG00000037400 or Atp11b"),
                     make_option(c("", "--highlight"), action = "store", type = "character", help = "Region to highlight as 35754106:35856276"),                    
                     make_option(c("-n", "--normalisation"), action = "store", type = "character", help = "Normalisation options: none, maxpeak, libsize, custom, libsize_maxpeak, custom_maxpeak [default %default]", default = "libsize"),
@@ -150,7 +151,7 @@ ImportiMapsBedgraph <- function(bedgraph.file) {
   # Convert scores to positives now that strands assigned
   bg$score <- abs(bg$score)
   
-  seqlevelsStyle(bg) <- "UCSC"
+  if(!opt$no_ucsc) seqlevelsStyle(bg) <- "UCSC"
   return(bg)
   
 }
@@ -176,7 +177,7 @@ SubsetBedgraph <- function(gr, selected.region.gr) {
 message("INFO: Loading annotation GTF")
 
 gtf <- rtracklayer::import.gff2(opt$gtf)
-seqlevelsStyle(gtf) <- "UCSC"
+if(!opt$no_ucsc) seqlevelsStyle(gtf) <- "UCSC"
 genes.gr <- gtf[gtf$type == "gene"]
 
 # Create TxDb if doesn't already exist
@@ -184,13 +185,13 @@ if(file.exists(gsub(".gtf.gz|.gtf", ".sqlite", opt$gtf))) {
 
   message("INFO: ...loading pre-existing annotation database")    
   TxDb <- loadDb(gsub(".gtf.gz|.gtf", ".sqlite", opt$gtf))
-  seqlevelsStyle(TxDb) <- "UCSC"
+  if(!opt$no_ucsc) seqlevelsStyle(TxDb) <- "UCSC"
   
 } else {
 
   message("INFO: ...creating annotation database for future runs")
   TxDb <- suppressMessages(makeTxDbFromGFF(opt$gtf))
-  seqlevelsStyle(TxDb) <- "UCSC"
+  if(!opt$no_ucsc) seqlevelsStyle(TxDb) <- "UCSC"
   saveDb(TxDb, gsub(".gtf.gz|.gtf", ".sqlite", opt$gtf))
 
 }
@@ -209,7 +210,7 @@ if(grepl("^ENS", opt$region)) {
 } else {
   # region.gr <- genes.gr[grepl(opt$region, genes.gr$gene_name)]
   region.gr <- genes.gr[opt$region == genes.gr$gene_name]
-  seqlevelsStyle(region.gr) <- "UCSC"
+  if(!opt$no_ucsc) seqlevelsStyle(region.gr) <- "UCSC"
 
 }
 
@@ -220,6 +221,9 @@ if(length(region.gr) > 1) {
   stop("ERROR: There are more than one genes with the given identifier. Consider specifying the coordinates instead.")
 
 }
+
+
+print(region.gr)
 
 # ==========
 # Part 1a - top half: normalised and smoothed tracks
@@ -238,7 +242,7 @@ if(all(grepl("bedgraph$|bedgraph.gz$", xlink.files))) {
   xlinks <- lapply(xlink.files, function(x) {
     
     xlinks.gr <- import.bed(x)
-    seqlevelsStyle(xlinks.gr) <- "UCSC"
+    if(!opt$no_ucsc) seqlevelsStyle(xlinks.gr) <- "UCSC"
     return(xlinks.gr)
 
   })
@@ -424,7 +428,7 @@ if(!is.null(opt$auxiliary)) {
   auxiliary.grl <- lapply(auxiliary.files, function(x) {
     
     auxiliary.gr <- import.bed(x)
-    seqlevelsStyle(auxiliary.gr) <- "UCSC"
+    if(!opt$no_ucsc) seqlevelsStyle(auxiliary.gr) <- "UCSC"
     return(auxiliary.gr)
 
   })
@@ -481,7 +485,7 @@ if(!is.null(opt$coverage)) {
   coverage.grl <- lapply(coverage.files, function(x) {
 
     gr <- import.bw(x)
-    seqlevelsStyle(gr) <- "UCSC"
+    if(!opt$no_ucsc) seqlevelsStyle(gr) <- "UCSC"
     gr <- subsetByOverlaps(gr, region.gr)
     return(gr)
 
@@ -541,7 +545,7 @@ if(!is.null(opt$coverage)) {
 
   if(!is.null(opt$coverage_groups)) {
 
-    p.coverage <- p.coverage + facet_grid(grp ~ ., labeller = label_wrap_gen(10)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
+    p.coverage <- p.coverage + facet_grid(grp ~ ., scales = "free_y", labeller = label_wrap_gen(10)) + theme(strip.text.y = element_text(size = 10, angle = 0, hjust = 0))
 
   }
 
